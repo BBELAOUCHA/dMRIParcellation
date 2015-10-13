@@ -384,23 +384,6 @@ plt.hist(SizeRegion,weights=weights, histtype='bar',
 plt.legend()
 
 plt.savefig(save_results_path+'/SizeHisto.png')
-CM=np.zeros((NBR_REGIONS,NBR_REGIONS))
-for i in range(NBR_REGIONS):
-    insideregion=np.where(np.array(Regions) == i)[0]
-    Az=Parc.Correlation_Matrix[insideregion,:]
-    for j in range(i+1):
-        outregion=np.where(np.array(Regions) == j)[0]
-        Ax=Az[:,outregion]
-        CM[i,j]=np.mean(Ax)
-        CM[j,i]=CM[i,j]
-plt.figure()
-plt.imshow(CM,interpolation='none')
-plt.xlabel('# Region', fontsize=14)
-plt.ylabel('# Region', fontsize=14)
-plt.colorbar()
-plt.tight_layout()
-plt.savefig(save_results_path+'/CorrelationMatrix/CMCheck.pdf', format='pdf')
-plt.show(block=False)
 plt.close('all')
                 # draw the cortical parcellation using 3D mayavi package
 t=float16(Regions)#
