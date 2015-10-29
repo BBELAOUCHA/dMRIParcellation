@@ -28,6 +28,8 @@
 #         Théodore Papadopoulo 2015
 ######################################################################################
 #   Needed packages that must be installed in your computer
+import sys
+sys.path.append("./inc/")
 from numpy import *
 import time
 import h5py
@@ -37,10 +39,10 @@ from Python2Vtk import WritePython2Vtk
 from scipy.stats.stats import pearsonr
 import matplotlib.pyplot as plt
 import argparse
-import sys
 import nibabel as nl
 from copy import deepcopy
 import gc
+
 class Mesh(): # class definition of mesh:-coordinates and tess connectivity
 
     def __init__(self,vertices,connectivity):
@@ -208,6 +210,7 @@ parser.add_argument('-Ex', action="store",dest='excluded')
 parser.add_argument('-NR', '--list', help='delimited list input', type=str)
 
 Arg=parser.parse_args()
+print "The number of regions:"
 ATLAS = [int(item) for item in Arg.list.split(',')]
 print ATLAS
 if not Arg.iteration:
