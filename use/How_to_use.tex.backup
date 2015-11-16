@@ -1,0 +1,40 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+
+%opening
+\title{A bottom-up parcellation of cortical surface using dMRI information}
+\author{Brahim Belaoucha}
+
+\begin{document}
+
+\maketitle
+
+\section{How to use:}
+There is two ways to use this code. Either on a Cluster or import it as a module in your personal python code.
+\subsection{In a terminal (or Cluster)}
+python run\_parcellation -i input\_path -o output\_path -seed coordinate -t tracto\_path -tb tracto\_prefix -NR Regions
+
+\noindent \textbf{input\_path}: It is a matlab file that contain the followings:
+\begin{itemize}
+ \item Faces: The faces of the mesh (cortical surface) ($N\times 3$).
+ \item Vertices: The coordinates of the vertices of the mesh (in anatomical or diffusion space) ($n\times 3$).
+ \item Normal: The normal vector at each vertex ($n\times 3$).
+\end{itemize}
+
+\noindent \textbf{output\_path}: path to the folder where you want to save the data. Be sure you have the right to write in this path.
+
+\noindent \textbf{coordinate}: path to the file containing the coordinates ($n\times 3$ of int elements) of the mesh in the diffusion space. 
+
+\noindent \textbf{tracto\_path}: path to the tractograms. They must be in Nifti format ".nii.gz".
+
+\noindent \textbf{tracto\_prefix}: The beginning of the tractogram name. The tractogram obtained from FSL have the following name: tracto\_prefix\_x\_y\_z.nii.gz, where 
+(x,y,z) is the coordinate of the tractogram.
+
+\noindent \textbf{Regions}: is the list of the requisted number of regions. Remember that this algorithm does not give the exact number of regions as required but it uses
+this list to stop growing big regions. 
+
+\subsection{Import it in your code}
+You need to use it as follow:\\
+import Region\_preparation as RP \\
+from Cortical\_surface\_parcellation import Parcellation as CSP 
+\end{document}

@@ -50,6 +50,7 @@ parser.add_argument('-seed', action="store",dest='coordinates')
 parser.add_argument('-Ex', action="store",dest='excluded')
 parser.add_argument('-sm', action="store",dest='SM')
 parser.add_argument('-NR', '--list', help='delimited list input', type=str)
+parser.add_argument('-cvth', action="store",dest='cv')
 Arg=parser.parse_args()
 Regions = [int(item) for item in Arg.list.split(',')]
 
@@ -70,4 +71,4 @@ normal_plot=Normal
 del Normal, Faces, Vertices
 Parcel=CSP(Arg.tractograms,Arg.tract_name,Arg.save)
 Mesh_plot=RP.Mesh(vertices_plot,[],faces_plot,normal_plot)
-Parcel.Parcellation_agg(coordinate,Connectivity, Excluded_seeds,Regions,Arg.SM,Mesh_plot)
+Parcel.Parcellation_agg(coordinate,Connectivity, Excluded_seeds,Regions,Arg.SM,Mesh_plot,float(Arg.cv))
