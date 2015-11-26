@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
 #####################################################################################
+#
+# This code contain the different similarity measure used in the cortical surface
+#parcellation from dMRI information (tractograms in nii.gz files) using the Mutual
+# Nearest Neighbor Condition "see ref.3"
+
+# There are 6 functions (Similarity measures):
+#    1.Pearson correlation  4.Tanimoto_SM
+#    2.Ruzicka_SM           5.Motyka_SM
+#    3.Cosine_SM            6.Roberts
+#
+#####################################################################################
 # BELAOUCHA Brahim
 # Copyright (C) 2015 Belaoucha Brahim
 # Version 1.0
@@ -7,29 +18,21 @@
 # University of Nice Sophia Antipolis
 # brahim.belaoucha@inria.fr
 # belaoucha.brahim@etu.unice.fr
-#
-# Different similarity measures that was used to parcellate the cortical surface from dMRI information.
-
-
 # If you use this code, you have to cite:
 # Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced source space”, in
 # Proceeding of International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), 2015.
-#Belaoucha and Théodore Papadopoulo, “”, in
-# Proceeding of ISMRM (ISMRM 2016), 2016.
+
+# Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical surface parcellation via dMRI using Mutual Nearset
+# Neighbor condition”,  Submitted, 2015.
+
+# Brahim Belaoucha and Théodore Papadopoulo, “Comparision of dMRI-based cortical surface parcellation
+# with different similarity measures”,  Submitted, 2015.
+# for more details about the similarity measures you can refer to # Encyclopedia of Distances by: Elena Deza, Michel Marie Deza,2009 #
 # Author: Brahim Belaoucha 2015
 #         Théodore Papadopoulo 2015
 ######################################################################################
-## import module
 import numpy as np
 from scipy.stats import pearsonr
-# In this code there is the following similarity measures:
-# Pearson_Correlation
-# Ruzicka
-# Roberts
-# Motycka
-# Tanimoto
-# Logit
-
 def Correlation_SM(Parc,region1,region2): # this function computes the average correlation between regions region1,region2
                         # Sum (corr(region1_i,region2_j))/total number of combinations
         S = 0
@@ -47,7 +50,7 @@ def Correlation_SM(Parc,region1,region2): # this function computes the average c
                     Parc.Similarity_Matrix[i,j] = a
                     Parc.Similarity_Matrix[j,i] = a
         return S/(len(region1)*len(region2))
-def Ruzicka_SM(Parc,region1,region2):   # Encyclopedia of Distances 2009
+def Ruzicka_SM(Parc,region1,region2):
         S = 0
         for i in region1:
             for j in region2:
@@ -56,8 +59,8 @@ def Ruzicka_SM(Parc,region1,region2):   # Encyclopedia of Distances 2009
                 else:
                     T1 = Parc.tractograms[i]
                     T2  = Parc.tractograms[j]
-                    a = [np.amin([T1[ix],T2[ix]]) for ix in range(len(T1))]
-                    b = [np.amax([T1[ix],T2[ix]]) for ix in range(len(T2))]
+                    a=np.minimum(T1, T2)
+		    b=np.maximum(T1, T2)
                     q=np.sum(a)/np.sum(b)
                     if np.isnan(q):
                         q=0
@@ -113,9 +116,9 @@ def Motyka_SM(Parc,region1,region2):
                 else:
                     T1 = Parc.tractograms[i]
                     T2  = Parc.tractograms[j]
-                    a = [np.amin([T1[ix],T2[ix]]) for ix in range(len(T1))]
-                    b = [T1[ix]+T2[ix]            for ix in range(len(T1))]
-                    q=2*np.sum(a)/(np.sum(b))
+                    a=np.minimum(T1,T2)
+                    b=np.add(T1,T2)
+                    q=np.sum(a)/np.sum(b)
                     if np.isnan(q):
                         q=0
                     S+= q
@@ -131,13 +134,12 @@ def Roberts_SM(Parc,region1,region2):
                 else:
                     T1 = Parc.tractograms[i]
                     T2  = Parc.tractograms[j]
-                    a=np.zeros(len(T1))
-                    for ix in range(len(T1)):
-                        if np.amax([T1[ix],T2[ix]]) == 0:
-                            a[ix] = 0
-                        else:
-                            a[ix] = (T1[ix]+T2[ix])*np.amin([T1[ix],T2[ix]])/(np.amax([T1[ix],T2[ix]]))
-                    b = [T1[ix]+T2[ix] for ix in range(len(T2))]
+                    b = np.add(T1,T2)
+		    Q1=np.minimum(T1,T2)
+		    Q2=np.maximum(T1,T2)
+                    c=np.divide(Q1,Q2)
+		    c[np.isnan(c)]=0.0
+                    a=np.multiply(b,c)
                     q=np.sum(a)/np.sum(b)
                     if np.isnan(q):
                         q=0
