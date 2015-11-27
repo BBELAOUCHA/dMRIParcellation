@@ -1,60 +1,110 @@
 \documentclass[a4paper,10pt]{article}
 \usepackage[utf8]{inputenc}
-
+\usepackage{listings}
+\usepackage{color}
+ 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+ 
 %opening
-\title{A bottom-up parcellation of cortical surface using dMRI information}
+\title{Cortical surface parcellation based on dMRI information and Mutual Nearest Neighbor condition}
 \author{Brahim Belaoucha}
 
 \begin{document}
 
 \maketitle
 
-\section{How to use:}
-There is two ways to use this code. Either on a Cluster or import it as a module in your personal python code.
-\subsection{Input}
-\noindent \textbf{input\_path}: It is a matlab file that contain the followings:
+This algorithm uses the dMRI information (tractogram of seeds) to divide the cortical surface into regions that have the highest Connectivity profiles (tractograms).
+
+The algorithm takes the following inputs;
+
+
+ \textbf{input\_path}: It is a matlab file that contain the followings:
 \begin{itemize}
  \item Faces: The faces of the mesh (cortical surface) ($N\times 3$).
  \item Vertices: The coordinates of the vertices of the mesh (in anatomical or diffusion space) ($n\times 3$).
  \item Normal: The normal vector at each vertex ($n\times 3$).
- \item Connectivity: matrix that locate the edges between the vertices ($n\times n$).
+ \item Mesh connectivity: matrix that locate the edges between the vertices ($n\times n$).
 \end{itemize}
-They are used to save the parcellation at each iteration on a '.vtk' file.
-\noindent \textbf{output\_path}: path to the folder where you want to save the data. Be sure you have the right to write in this path.
 
-\noindent \textbf{coordinate}: path to the file containing the coordinates ($n\times 3$ of int elements) of the mesh in the diffusion space. 
+ \textbf{output\_path}: path to the folder where you want to save the data. Be sure you have the right to write in this path.
 
-\noindent \textbf{tracto\_path}: path to the tractograms. They must be in Nifti format ".nii.gz".
+ \textbf{coordinate}: path to the file containing the coordinates ($n\times 3$ of int elements) of the mesh in the diffusion space. 
 
-\noindent \textbf{tracto\_prefix}: The beginning of the tractogram name. The tractogram obtained from FSL have the following name: tracto\_prefix\_x\_y\_z.nii.gz, where 
-(x,y,z) is the coordinate of the tractogram.
+ \textbf{tracto\_path}: path to the tractograms. They must be in Nifti format ".nii.gz".
 
-\noindent \textbf{Regions}: is the list of the required number of regions. Remember that this algorithm does not give the exact number of regions as required but it uses
+ \textbf{tracto\_prefix}: The beginning of the tractogram name. The tractogram obtained from FSL have the following name: tracto\_prefix\_x\_y\_z.nii.gz, where 
+(x,y,z) is the coordinate of the seed.
+
+ \textbf{Regions}: is a list of the required number of regions. Remember that this algorithm does not give the exact number of regions as required but it uses
 this list to stop growing big regions.
 
-\noindent \textbf{Excluded\_seeds}: path to the file seeds that should be excluded from the parcellation (ex.Thalamus, or one hemisphere).  
+ \textbf{Excluded\_seeds}: path to the file containing the seeds that will be excluded from the parcellation (ex.Thalamus, or one hemisphere).  
 
-\noindent \textbf{SM\_method}: the name of the similarity measure used in the parcellation. Fow now there is: "Correlation" (default), "Ruzicka", "Roberts", "Tanimoto", "Motyka", "Cosine"
+ \textbf{SM\_method}: the name of the similarity measure used in the parcellation. Fow now there is: "Correlation" (default), "Ruzicka", "Roberts", "Tanimoto", "Motyka", "Cosine"
 
-\noindent \textbf{Cvariance}: The coefficient of variance threshold is used to stop merging regions that have high variance of the similarity measure values. 
-\subsection{output}
-The parcellation at each iteration is saved in output\_path/RealLabel/ in '.vtk' format. At the end, the similarity measure between all pairs of the region is saved in output\_path/SM\_all.txt (a vector so the order is not preserved). 
+ \textbf{Cvariance}: The coefficient of variance threshold is used to stop merging regions that have high variance of the similarity measure values. 
 
-\subsection{In a terminal (or Cluster)}
+ 
+The algorithm's output is the Labels at each iteration in the path output\_path/RealLabel/ in '.vtk' format. Also the parcellation after merging small regions ($<0.1\frac{nbr_{seed}}{R}$) with big ones.
+Few results concerning the mean and the std of the similarity measure values can be found in "results.txt".
+
+\section{In a terminal (or Cluster)}
 It is easy and straight forward: 
 
-\noindent python run\_parcellation -i input\_path -o output\_path -seed coordinate -t tracto\_path -tb tracto\_prefix -NR Regions -Ex Excluded\_seeds -sm SM\_method -cvth Cvariance
+\noindent \textbf{python run\_parcellation} \textbf{-i} input\_path \textbf{-o} output\_path \textbf{-seed} coordinate \textbf{-t} tracto\_path \textbf{-tb} tracto\_prefix \textbf{-NR} Regions \textbf{-Ex} Excluded\_seeds \textbf{-sm} SM\_method -\textbf{cvth} Cvariance
 
-\subsection{Import it in your code}
-You need to use it as follow:\\
-import Region\_preparation as RP \\
-from Cortical\_surface\_parcellation import Parcellation as CSP \\
-Parcel=CSP(tracto\_path,tracto\_prefix, output\_path)\\
-Mesh\_plot=RP.Mesh(Vertices,[],Faces,Normal)\\
-Excluded=numpy.loadtxt(Excluded\_seeds)\\
-Parcel.Parcellation\_agg(coordinate,Connectivity, Excluded,Regions,SM\_method,Mesh\_plot)\\
+The similarity method and number of regions should be in the following format; 
+\begin{itemize}
+ \item SM\_method: "Cosine,Ruzicka,Tanimoto,Motyka,Roberts"
+ \item Regions: "1000,500,250"
+\end{itemize}
 
-\noindent The only difference between the two ways of executing the parcellation is the imput "Regions". In the terminal, the different number of regions should be separated by a comma  ex. 100,200,300. But it must be an array of integers if you use the second way.
 
-\noindent We advice to use to first way for the whole brain parcellation and the second for parcellating a region of interest.
+\section{Run in python Code}
+\begin{lstlisting}[language=Python]
+import Region_preparation as RP 
+from Cortical_surface_parcellation import Parcellation as CSP
+
+Vertices,Connectivity,Faces,Normal,coordinate=[],[],[],[],[]
+# Different similarity measures
+SM_method=["Cosine","Ruzicka","Tanimoto","Motyka","Roberts"]
+# R values
+Regions=[1000,500,250]
+# Initialize the parcellation
+Parcel=CSP(tracto_path,tracto_prefix, output_path)
+# The cortical surface that will be visualize in vtk
+Mesh_plot=RP.Mesh(Vertices,Connectivity,Faces,Normal)
+# Exclude the seeds
+Excluded=[]
+# Run the parcellation
+Parcel.Parcellation_agg(coordinate,Connectivity,Excluded,
+                        Regions,SM_method,Mesh_plot,Cvariance)
+\end{lstlisting}
+
+\noindent Both executions will create folders at the location output\_path with the name of the similarity measures (ex. output\_path/Cosine/500/).
+
 \end{document}

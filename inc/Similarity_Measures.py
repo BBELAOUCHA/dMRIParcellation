@@ -23,10 +23,10 @@
 # Proceeding of International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), 2015.
 
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical surface parcellation via dMRI using Mutual Nearset
-# Neighbor condition”,  Submitted, 2015.
+# Neighbor condition”,  Submitted, 2016.
 
 # Brahim Belaoucha and Théodore Papadopoulo, “Comparision of dMRI-based cortical surface parcellation
-# with different similarity measures”,  Submitted, 2015.
+# with different similarity measures”,  Submitted, 2016.
 # for more details about the similarity measures you can refer to # Encyclopedia of Distances by: Elena Deza, Michel Marie Deza,2009 #
 # Author: Brahim Belaoucha 2015
 #         Théodore Papadopoulo 2015
