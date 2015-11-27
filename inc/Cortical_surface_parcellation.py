@@ -71,8 +71,8 @@ class Parcellation():# main class to parcellate the cortical surface
                 ATime=time.time() # execution time for each loop
                 integrated_regions=int(round(0.1*(len(Parc.zero_tracto)+len(Parc.nonzero_tracto))/R))# merge at the end
                 self.save_results_path=self.save_path+"/"+SM+"/"+str(R)                                   # regions that have size less than 10 %
-                if not os.path.exists(self.save_results_path+'/LabelSurface'): # the cortical regions
-                    os.makedirs(self.save_results_path+'/LabelSurface')
+                if not os.path.exists(self.save_results_path): # the cortical regions
+                    os.makedirs(self.save_results_path)
                 nbr_seeds=len(mesh.vertices[:,0]) # number of vertices
                 Reg=RP.Regions_processing(nbr_seeds)# initialize the class to handle regions
                 Regions=Reg.regions # initialize regions, each seed is a region.
@@ -143,7 +143,7 @@ class Parcellation():# main class to parcellate the cortical surface
                     Labels.append(RX)
                 ##### add the zero tractogram to the nearest non zero tractogram that is labeled
                 Reg.Write2file(self.save_results_path,SM,nbr_r,t,mean_v,std_v,R) # save results in ./results.txt
-                np.savetxt(self.save_results_path+'/LabelSurface/Labels_per_iteration.txt',np.transpose(Labels), fmt='%i',delimiter='\t')
+                np.savetxt(self.save_results_path+'/Labels_per_iteration.txt',np.transpose(Labels), fmt='%i',delimiter='\t')
                 # merge small regions
                 mesh.connectivity=Connectivity_X
                 NBR=np.unique(RX)
@@ -157,8 +157,8 @@ class Parcellation():# main class to parcellate the cortical surface
 
                 Regions=Reg.Small_region(SizeRegion,Regions,Connectivity_X,integrated_regions) # function used to merge small regions (<10% of nbr_seeds/R) with big ones
                 WritePython2Vtk(self.save_results_path+'/Parcellated.vtk', Mesh_plot.vertices.T, Mesh_plot.faces.T,Mesh_plot.normal.T, Regions, "Cluster")# save the final result in vtk
-                np.savetxt(self.save_results_path+'/Parcellated.txt',Regions,fmt='%i')# save the final result of the parcellation in txt
                 self.Time.append((time.time()-ATime)/60)
+
     def Add_void(self,Parc,Reg,region_labels,Regions,Excluded_seeds,LABEL_ORIG): # function used to add the labels to the viod tractograms
         NBR_REGIONS=len(region_labels)
         SizeRegion=np.zeros(NBR_REGIONS)
@@ -166,6 +166,7 @@ class Parcellation():# main class to parcellate the cortical surface
             insideregion=np.where(np.array(Regions) == region_labels[ii])[0]
             SizeRegion[ii]=len(insideregion)
             Regions[np.array(insideregion)]=ii
+
         if len(Parc.zero_tracto)>0:
             RX=Reg.Add_zero_tracto_label(Parc,Regions) # add the label of the void tractograms
             RX=RX+1  # label {1,..,NBR_REGIONS}
