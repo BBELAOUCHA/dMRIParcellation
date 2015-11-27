@@ -1,3 +1,7 @@
+To run the test example 
+type the terminal: sh run_parc.sh
+
+
 see ./use/How_to_use.pdf
 
 run_parc.pbs: 		an example on how to run in the cluster: qsub run_parc.pbs.
