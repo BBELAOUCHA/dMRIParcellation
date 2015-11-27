@@ -82,6 +82,7 @@ class Parcellation():# main class to parcellate the cortical surface
                 region_labels=range(nbr_seeds)
                 mesh.connectivity=deepcopy(Connectivity)
                 nbr_r,t,mean_v,std_v =[],[],[],[] # vectors that conatin nbr regions, execution time, mean and std of the similarity values at each iteration
+                Labels=[]
                 while nbr_remaining > 0: # nbr of iteration
                     #   For each region find the best candidate to merge with it. (DRegion)
                     Dregion=[] # vector contains the Mutual nearest N
@@ -130,17 +131,19 @@ class Parcellation():# main class to parcellate the cortical surface
                     region_labels=np.unique(Regions)
                     if (len(region_labels) == NBR_REGIONS) or (len(region_labels) <= R) or (int(mesh.connectivity.sum()) == 0):   # condition to stop the code. if the same nbr of region before and after stop iterating
                         RX,NBR_REGIONS=self.Add_void(Parc,Reg,region_labels,Regions,Excluded_seeds,LABEL_ORIG)
+                        Labels.append(RX)
                         break # exit the while loop
                     RX,NBR_REGIONS=self.Add_void(Parc,Reg,region_labels,Regions,Excluded_seeds,LABEL_ORIG)
-                    WritePython2Vtk(self.save_results_path+'/LabelSurface/Label_'+str(int(nbr_iteration-nbr_remaining+1))+'.vtk', Mesh_plot.vertices.T, Mesh_plot.faces.T,Mesh_plot.faces.T, RX, "Cluster")# save in vtk
+                    #WritePython2Vtk(self.save_results_path+'/LabelSurface/Label_'+str(int(nbr_iteration-nbr_remaining+1))+'.vtk', Mesh_plot.vertices.T, Mesh_plot.faces.T,Mesh_plot.faces.T, RX, "Cluster")# save in vtk
                     nbr_remaining-=1 # in (de) crease iteration
                     nbr_r.append(NBR_REGIONS) # append the nbr of regions
                     t.append((time.time()-ATime)/60) # add execution time to the current parcellation
                     mean_v.append(np.mean(SM_vector)) # add the mean of the SM values
                     std_v.append(np.std(SM_vector))   # add the std of the SM values
+                    Labels.append(RX)
                 ##### add the zero tractogram to the nearest non zero tractogram that is labeled
                 Reg.Write2file(self.save_results_path,SM,nbr_r,t,mean_v,std_v,R) # save results in ./results.txt
-                np.savetxt(self.save_results_path+'/LabelSurface/Labels.txt',RX)
+                np.savetxt(self.save_results_path+'/LabelSurface/Labels_per_iteration.txt',np.transpose(Labels), fmt='%i',delimiter='\t')
                 # merge small regions
                 mesh.connectivity=Connectivity_X
                 NBR=np.unique(RX)
