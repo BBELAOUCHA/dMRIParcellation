@@ -54,7 +54,7 @@ def ReadVtk2Python(filename):
     # F: Faces    (nbr of faces * 3)
     # D: Data     (nbr of vertices*1)
     # N: Normals  (nbr of vertices * 3)
-    fo = open(filename, 'rw+')
+    #fo = open(filename, 'rw+')
     with open(filename) as f:
         mylist = f.read().splitlines()
     File_name = mylist[1].split(" ")

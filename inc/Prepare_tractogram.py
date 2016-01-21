@@ -52,6 +52,25 @@ class Parcellation_data():
 	self.non_zeroMask = np.array(np.nonzero(M)[0])  # get the voxels of only the mask.
 	del MASK, M
 
+    def Repeated_Coordinate(self,V):
+        self.non_duplicated={}
+        for i in np.arange(np.max(np.shape(V))):
+            v=V[i,:]
+            B=np.subtract(V, v)
+            C=np.add(np.add(np.absolute(B[:,0]),np.absolute(B[:,1])),np.absolute(B[:,2]))
+            D=np.where(C == 0)[0]
+            for j in range(len(D)):
+                if D[j] not in self.non_duplicated.keys():
+                        self.non_duplicated[D[j]] = i
+        Q2=np.unique(self.non_duplicated.values())
+        self.coordinate_2_read=[]
+        self.ind_2_loaded={}
+        for i in range(len(Q2)):
+            self.ind_2_loaded[Q2[i]] = i
+            self.coordinate_2_read.append(V[Q2[i],:])
+        #return self.non_duplicated,self.ind_2_loaded[self.non_duplicated]
+
+
     def Read_Tracto(self, V): # function used to read and return the tractogram in 3D
 	# read the nii.gz tractogram files one by one
 	x, y, z = V # extract the x,y,z coordinate
@@ -109,19 +128,3 @@ class Parcellation_data():
                     best_neighbor = valid_neighbors[np.array(distances).argmin()]	 # chose the non void tracto which is the closest in euclidian distance
                     self.replacement[k] = best_neighbor
                     break	 # exit the while , go the next void tractogram
-
-    def Logit_function(self): # function used to transfer the tractogram from prbability space to logit space
-
-        self.tractograms_logit=[]
-        zero_value, one_value = 1e-6,0.9999999
-        nbr_non_zero=len(self.nonzero_tracto)
-        for i in range(nbr_non_zero):
-            tracto = np.array(self.tractograms[i])
-            tracto = tracto/np.max(tracto)
-            ind_zero = np.where(tracto == 0)[0]
-            ind_one = np.where(tracto == 1)[0]
-            tracto[np.array(ind_zero)] = zero_value
-            tracto[np.array(ind_one)] = one_value
-            logit_p=np.add(np.log(tracto), -np.log(1-tracto))  # logit(p)=ln(p/(1-p))
-            self.tractograms_logit.append(logit_p)
-        self.tractograms = self.tractograms_logit # replace the probability space by the logit space

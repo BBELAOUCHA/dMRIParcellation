@@ -17,7 +17,7 @@
 # # INRIA Sophia Antipolis Méditerranée # #
 ######################################################################################
 import sys
-sys.path.append("./inc/")
+sys.path.append("./inc")
 import h5py
 import scipy
 import numpy as np
@@ -51,6 +51,6 @@ nbr_sample = 6000  # Number of samples that are used in the probabilistic tracto
 cvth = 30000  # parameter used to stop merging regions.
 Verbose = True
 nodif_path = CurrentF+"/bedpostx/nodif_brain_mask.nii.gz"  # mask used to reduce the required memory. The tractogram's voxels outside the mask are zeros.
-Par = CSP(path_tractogram, Prefix_name, save_path, nodif_path, nbr_sample, Verbose)  # prepare to read tractograms
+Par = CSP(path_tractogram, Prefix_name, save_path, nodif_path, Verbose)  # prepare to read tractograms
 Mesh_plot = RP.Mesh(vertices_plot.T, faces_plot.T, normal_plot.T)  # prepare mesh to visualize
 Par.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, Regions, SM_method, Mesh_plot, cvth)  # run parcellation

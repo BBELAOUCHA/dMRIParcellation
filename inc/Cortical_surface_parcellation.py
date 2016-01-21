@@ -89,17 +89,18 @@ class Parcellation():  # main class to parcellate the cortical surface
 	mesh = RP.Mesh(coordinate,[],[], Connectivity)  # create an object containing the coordinate and mesh connectivity
 	# prepare the parcellation by seeting the different paths
 	Parc = PT.Parcellation_data(self.path_tractogram, self.Prefix_name, mesh, self.nodif_mask)
+	Parc.Repeated_Coordinate(coordinate)
 	Parc.Detect_void_tracto()  # detect zero tracto ( tractogram that has sum less than 3*max(tractogram))
 	if len(Parc.zero_tracto) > 0:  # if there are void tractograms
 		Parc.Replace_void_tracto()  # replace void tractograms by the nearest neighbor non void
 		mesh.Remove_void_tracto(Parc.zero_tracto, Parc.nonzero_tracto)  # remove the void tractogram to speed up the computation.
 	printData = {} # This dictionary is used to save the different results to be printed in the terminal
-	printData['Nbr excluded seeds:'] = len(Excluded_seeds)
+	printData['# excluded seeds:'] = len(Excluded_seeds)
 	printData['Path to tractogram:'] = self.path_tractogram
 	printData['Prefix name:'] = self.Prefix_name
 	printData['Path to nodif mask:'] = self.nodif_mask
 	printData['Save path:'] = self.save_path
-	printData['Nbr tractograms, Nbr Void tractograms'] = len(range(len(coordinate[:, 0]))), len(Parc.zero_tracto)
+	printData['# tractograms, # Void tractograms'] = len(range(len(coordinate[:, 0]))), len(Parc.zero_tracto)
 
         Connectivity = deepcopy(mesh.connectivity)  # hard (not shallow) copy the new mesh connec after removing void tractogram used at each R and SM
         nbr_iteration = 100  # total number of iterations fixed, generally 50 is enough
@@ -109,7 +110,7 @@ class Parcellation():  # main class to parcellate the cortical surface
             Parc.Similarity_Matrix = np.eye(np.shape(Parc.Similarity_Matrix)[0])  # re initialize the Similarity_Matrix for the next similarity measure
             for R in NbrRegion:  # loop over the list containing the number of regions "R"
                 ATime = time.time()  # execution time for each loop
-                integrated_regions = round(0.1*(len(Parc.zero_tracto)+len(Parc.nonzero_tracto))/R)# merge at the end
+                integrated_regions = round(0.06*(len(Parc.zero_tracto)+len(Parc.nonzero_tracto))/R)# merge at the end
                 self.save_results_path = self.save_path+"/"+SM+"/"+str(R)                                   # regions that have size less than 10 %
                 if not os.path.exists(self.save_results_path):  # the cortical regions
                     os.makedirs(self.save_results_path) # create the folder is not found
@@ -126,9 +127,9 @@ class Parcellation():  # main class to parcellate the cortical surface
                 nbr_r, t, mean_v, std_v = [], [], [], []
                 Labels = [] # list of list contains the labels at each iteration
                 printData = {} # re empty the dictionary that is used to display results
-                printData['Nbr Region'] = R
+                printData['# Region'] = R
                 printData['Similarity Measure'] = SM
-                printData['Nbr Iterations'] = nbr_iteration
+                printData['# Iterations'] = nbr_iteration
                 self.PrintResults(printData) # disply results if verbose is active
                 while nbr_remaining > 0:  # nbr of iteration
                     printData = {} # dictionary used to display results
@@ -187,7 +188,7 @@ class Parcellation():  # main class to parcellate the cortical surface
                     mean_v.append(np.mean(SM_vector))  # add the mean of the SM values
                     std_v.append(np.std(SM_vector))   # add the std of the SM values
                     Labels.append(Label_all)
-                    printData['Iter, Nbr Reg, time(m), mean, std'] = nbr_iteration-nbr_remaining, NBR_REGIONS, format(t[-1], '.3f'), format(mean_v[-1], '.3f'), format(std_v[-1], '.3f')
+                    printData['Iter, # Reg, time(m), mean, std'] = nbr_iteration-nbr_remaining, NBR_REGIONS, format(t[-1], '.3f'), format(mean_v[-1], '.3f'), format(std_v[-1], '.3f')
                     self.PrintResults(printData) # print results at each iteration if verbose is true
 
                 # add the zero tractogram to the nearest non zero tractogram that is labeled

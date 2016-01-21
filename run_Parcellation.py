@@ -49,12 +49,19 @@ Arg = parser.parse_args() # read different parameters
 coordinate = np.loadtxt(str(Arg.coordinates), unpack=True, delimiter='\t', dtype=float).T # read the diffusion space coordinate of the seeds
 Cortex = h5py.File(str(Arg.input), 'r') # load the details of the mesh, coordinate, faces, normal, mesh connecticity.
 vertices_plot = np.array(Cortex['Vertices']) # get the coordinate in the anatomy image
-normal_plot = np.array(Cortex['VertNormals']) # get the normals in the anatomical space
-faces_plot = np.array(Cortex["Faces"], dtype=int)  # get faces of the mesh in the anatomical space.
-C = Cortex['VertConn'] # get the tess connectivity matrix
-D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))#
-Connectivity = np.array(D_conenct.todense())
-del D_conenct, C, Cortex # delete unused dat
+normal_plot=[]
+if "VertNormals" in Cortex.keys():
+    normal_plot = np.array(Cortex['VertNormals']) # get the normals in the anatomical space
+faces_plot=[]
+if "Faces" in Cortex.keys():
+    faces_plot = np.array(Cortex["Faces"], dtype=int)  # get faces of the mesh in the anatomical space.
+
+Connectivity=np.eye(np.max(np.shape(coordinate)))
+if "VertConn" in Cortex.keys():
+    C = Cortex['VertConn'] # get the tess connectivity matrix
+    D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))#
+    Connectivity = np.array(D_conenct.todense())
+    del D_conenct, C, Cortex # delete unused dat
 Excluded_seeds=[] # default excluded seeds
 if Arg.excluded:
     Excluded_seeds = np.loadtxt(Arg.excluded) # get the list of the excluded seeds
