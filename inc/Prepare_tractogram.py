@@ -21,10 +21,6 @@
 # If you use this code, you have to cite 2 of the following:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface Parcellation via dMRI Using Mutual
 #Nearset Neighbor Condition”, International Symposium on Biomedical Imaging, Apr 2016, Prague, Czech Republic. 2016.
-
-# Brahim Belaoucha and Théodore Papadopoulo, “Comparision of dMRI-based cortical surface parcellation
-# with different similarity measures”,  Submitted, 2016.
-
 # Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced source space”, in
 #   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), 2015.
 # Author: Brahim Belaoucha 2015

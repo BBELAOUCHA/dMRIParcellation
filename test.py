@@ -47,7 +47,6 @@ faces_plot = Faces
 normal_plot = Normal
 SM_method = ['Cosine']  #,'Tanimoto','Motyka','Ruzicka','Roberts']  # The similarity measures that will be used.
 Regions = [1000, 800, 600, 400, 200, 100]  # number of regions, used to stop merging big regions
-nbr_sample = 6000  # Number of samples that are used in the probabilistic tractography.
 cvth = 30000  # parameter used to stop merging regions.
 Verbose = True
 nodif_path = CurrentF+"/bedpostx/nodif_brain_mask.nii.gz"  # mask used to reduce the required memory. The tractogram's voxels outside the mask are zeros.
