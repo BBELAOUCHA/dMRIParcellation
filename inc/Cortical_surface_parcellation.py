@@ -31,7 +31,7 @@ import time
 
 
 class Parcellation():  # main class to parcellate the cortical surface
-    def __init__(self, path_tractogram, Prefix_name, save_path, nodif_mask, VERBOSE=False):  # initialize; prepare the paths
+    def __init__(self, path_tractogram, Prefix_name, save_path, nodif_mask, VERBOSE=False, merge=1):  # initialize; prepare the paths
 	self.path_tractogram = path_tractogram	 # path where the tractogram are located
 	self.Prefix_name = Prefix_name	 # prefix of the tractogram: Prefix_name_x_y_z.nii.gz
 	self.save_path = save_path	 # folder that will contain the results
@@ -39,7 +39,7 @@ class Parcellation():  # main class to parcellate the cortical surface
 	self.Time = []	 # array contains the execution time
 	self.save_results_path = ' '	 # folder of each execution
 	self.verbose = VERBOSE # variable used to enable terminal display of the results
-
+        self.merge = merge
     def PrintResults(self, Data):  # print the different results in the terminal
 	if self.verbose:  # The result is saved in a dictionary
 	   for i in Data.keys():
@@ -201,8 +201,12 @@ class Parcellation():  # main class to parcellate the cortical surface
                     SizeRegion[i] = len(index) # get the size of the regions
                     Regions[np.array(index)] = i
 
-                Regions=self.Small_Region_st(Parc, SimilarityMeasure, Reg, SizeRegion, Regions, mesh, integrated_regions) # merge small regions with the nearest region (highest SM)
-                Reg_sm=self.Statistics_SM(Parc,Regions) # extract the SM as a vector of the last label
+                if self.merge:
+                    Regions = self.Merge_till_R(Parc, SimilarityMeasure, Reg, SizeRegion, Regions, mesh, R) # merge small regions with the nearest region (highest SM) to have R nbr of regions
+                else:
+                    Regions = self.Small_Region_st(Parc, SimilarityMeasure, Reg, SizeRegion, Regions, mesh, integrated_regions) # merge small regions with the nearest region (highest SM)
+
+                Reg_sm = self.Statistics_SM(Parc,Regions) # extract the SM as a vector of the last label
                 nbr_r.append(len(np.unique(Regions)))  # append the nbr of regions
                 t.append((time.time()-ATime)/60)  # add execution time to the current parcellation
                 mean_v.append(np.mean(Reg_sm))  # add the mean of the SM values
@@ -213,7 +217,6 @@ class Parcellation():  # main class to parcellate the cortical surface
                 self.Write2file(SM, nbr_r, t, mean_v, std_v, R)  # save results in ./results.txt
                 np.savetxt(self.save_results_path+'/Labels_per_iteration.txt', np.transpose(Labels), fmt='%i', delimiter='\t')
                 WritePython2Vtk(self.save_results_path+'/Parcellation.vtk', Mesh_plot.vertices.T, Mesh_plot.faces.T, Mesh_plot.normal.T, Regions)  # save the final result in vtk
-
 
     def Small_Region_st(self,Parc,SimilarityMeasures,Reg,SizeRegion, Regions, mesh, integrated_regions):  # function used to merge the small regions
         # so that in total you will have regions with the highest structural connecitvity
@@ -252,6 +255,35 @@ class Parcellation():  # main class to parcellate the cortical surface
             if len(Reg_small) == nbr_small_rg:  # break the loop if the pre and actual number of small regions are equal
           	break # stop merging small regions
             nbr_small_rg = len(Reg_small)
+        return RegionsX  # label of seeds after merging small regions with big ones.
+
+    def Merge_till_R(self,Parc,SimilarityMeasures,Reg,SizeRegion, Regions, mesh, R_coef):  # function used to merge the small regions
+        # so that in total you will have regions with the highest structural connecitvity and total number of regions == R_coef
+        Un = np.unique(Regions) # the uniqe labels
+        RegionsX = np.array(Regions)
+        while len(Un) > R_coef:  # loop to merge small regions with bigger ones
+            Reg_small = SizeRegion.argmin()
+            sth, X = 0, Reg_small
+            insideregion, connected_regions = Reg.Neighbor_region(RegionsX, Reg_small, mesh) # get the neighbors and seeds of region Z[i]
+            for j in range(len(connected_regions)): # loop over all regions
+                if connected_regions[j] != 0:
+                    outeregion = np.where(RegionsX == connected_regions[j])[0]
+                    S_mean = SimilarityMeasures(Parc, insideregion, outeregion)
+                    if (S_mean > sth):  # if the region  connected_regions[j] and Z[i] have high similarity measure
+                        sth = S_mean #   merge Z[i] to connected_regions[j]
+                        X = connected_regions[j] # merge Z[i] to connected_regions[j]
+            RegionsX2 = np.array(RegionsX)
+            indx = np.where(RegionsX == Reg_small)[0]
+            RegionsX2[np.array(indx)] = X
+            Un = np.unique(RegionsX2)# new unique labels
+            nbr_r = len(Un) # new number of regions
+            SizeRegion = np.zeros(nbr_r)
+            RegionX_ = np.zeros(len(RegionsX2))
+            for i in range(nbr_r): # get the size of the new regions
+                ind = np.where(RegionsX2 == Un[i])[0]
+                SizeRegion[i] = len(ind)
+                RegionX_[np.array(ind)] = i
+            RegionsX = RegionX_
         return RegionsX  # label of seeds after merging small regions with big ones.
 
     def Statistics_SM(self,Parc,Regions): # function used to extract the the similarity measure values between all the pairs in each region as a vector
