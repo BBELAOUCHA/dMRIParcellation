@@ -20,9 +20,10 @@
 # belaoucha.brahim@etu.unice.fr
 # If you use this code, you have to cite 2 of the following:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface Parcellation via dMRI Using Mutual
-#Nearset Neighbor Condition”, International Symposium on Biomedical Imaging, Apr 2016, Prague, Czech Republic. 2016.
+#    Nearset Neighbor Condition”, International Symposium on Biomedical Imaging: From Nano to Macro, Prague,
+#    Czech Republic. pp. 903-906, April 2016.
 # Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced source space”, in
-#   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), 2015.
+#   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), Utrecht, Netherlands, September 2015.
 # Author: Brahim Belaoucha 2015
 #         Théodore Papadopoulo 2015
 ######################################################################################
@@ -48,7 +49,8 @@ class Parcellation_data():
 	self.non_zeroMask = np.array(np.nonzero(M)[0])  # get the voxels of only the mask.
 	del MASK, M
 
-    def Repeated_Coordinate(self,V):
+    def Repeated_Coordinate(self, V):
+
         self.non_duplicated={}
         for i in np.arange(np.max(np.shape(V))):
             v=V[i,:]
@@ -67,7 +69,7 @@ class Parcellation_data():
         #return self.non_duplicated,self.ind_2_loaded[self.non_duplicated]
 
 
-    def Read_Tracto(self, V): # function used to read and return the tractogram in 3D
+    def Read_tracto(self, V): # function used to read and return the tractogram in 3D
 	# read the nii.gz tractogram files one by one
 	x, y, z = V # extract the x,y,z coordinate
 	filename = self.tract_path+'/'+self.tract_name+str(int(x))+'_'+str(int(y))+'_'+str(int(z))+'.nii.gz'
@@ -93,11 +95,11 @@ class Parcellation_data():
 	vertices = list(self.mesh.vertices)# the coordinate of the seeds in the diffusion space
 	for i in range(len(vertices)): # loop over the coordinates
             seed = vertices[i] # extract the x,y,z coordinate
-            T = self.Read_Tracto(seed)	 # read the tractogram
+            T = self.Read_tracto(seed)	 # read the tractogram
             self.nbr_sample = np.max(T.reshape(-1)) # if all voxel = 0, nbr_sample = 0
             Sm = np.sum(T)
-            if (Sm <= self.nbr_sample*3):	 # detect void tractogram. It defined as the tractogram that has a sum
-                self.zero_tracto.extend([i]) # less then 3* number of samples
+            if (Sm <= self.nbr_sample*5):	 # detect void tractogram. It defined as the tractogram that has a sum
+                self.zero_tracto.extend([i]) # less then 5* number of samples
             else:
 		self.nonzero_tracto.extend([i]) # add the ith seed to the non viod tractogram
 		T1 = T.reshape(-1)  # from 3D to a vector form

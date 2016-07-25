@@ -1,6 +1,6 @@
 # dMRIParcellation
-Cortical Surface parcellation based on dMRI information (Connectivity profiles)
-dMRIParcellation is a python toolbox for parcellation the cortical surface using diffusion Magnetic Resonanse Imaging (dMRI) information and the Mutual Nearest Neighbor condition.
+
+dMRIParcellation is a python toolbox for parcellating the cortical surface using diffusion Magnetic Resonanse Imaging (dMRI) information and the Mutual Nearest Neighbor condition.
 
 The parcellation algorithm needs the mesh connectivity, the tractograms of the seeds (vertices of the mesh) in NIfTi format ".nii.gz", and the coordinate of the seeds in the diffusion space in ".txt" file. The file name of the tractogram of seed i with coordinate (x,y,z) is assumed to follow the results of the probabilistic tractography of FSL i.e. file_prefix_x_y_z.nii.gz.
 

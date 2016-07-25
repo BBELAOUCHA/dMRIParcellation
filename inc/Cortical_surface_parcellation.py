@@ -14,7 +14,10 @@
 # belaoucha.brahim@etu.unice.fr
 # If you use this code, you have to cite:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface Parcellation via dMRI Using Mutual
-#Nearset Neighbor Condition”, International Symposium on Biomedical Imaging, Apr 2016, Prague, Czech Republic. 2016.
+#    Nearset Neighbor Condition”, International Symposium on Biomedical Imaging: From Nano to Macro, Prague,
+#    Czech Republic. pp. 903-906, April 2016.
+# Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced source space”, in
+#   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), Utrecht, Netherlands, September 2015.
 # Author: Brahim Belaoucha 2015
 #         Théodore Papadopoulo 2015
 ######################################################################################
@@ -37,7 +40,7 @@ class Parcellation():  # main class to parcellate the cortical surface
 	self.save_path = save_path	 # folder that will contain the results
 	self.nodif_mask = nodif_mask	 # path to mask of the brain fron b0 image
 	self.Time = []	 # array contains the execution time
-	self.save_results_path = ' '	 # folder of each execution
+	self.save_results_path = '_'	 # folder of each execution
 	self.verbose = VERBOSE # variable used to enable terminal display of the results
         self.merge = merge
     def PrintResults(self, Data):  # print the different results in the terminal
@@ -66,39 +69,44 @@ class Parcellation():  # main class to parcellate the cortical surface
     def Write2file(self, Similarity_Measure, nbr_r, t, mean_v, std_v, R):  # writesome results of the regions
         # path to save, Similarity measure, nbr of regions, time of execution, mean values of SM, std of SM, stopping condition R.
         resultfile = open(self.save_results_path+'/results.txt', 'w')
-        resultfile.write('Similarity Measure: '+Similarity_Measure+'\t R:='+str(R)+'\n')
+        resultfile.write('Similarity \t Measure \t : \t'+Similarity_Measure+'\t R:='+str(R)+'\n')
         resultfile.write('nbr i \t nbr R \t t(min) \t mean SM \t STD SM: \n')
         for i in range(len(nbr_r)):
-            resultfile.write(str(i+1)+'\t'+str(nbr_r[i]) + '\t' + str(t[i])+'\t'+str(mean_v[i])+'\t'+str(std_v[i])+'\n')
+            nbr= "%03d" % nbr_r[i]
+            resultfile.write(str(i+1)+'\t'+nbr+ '\t' + str(t[i])+'\t'+str(mean_v[i])+'\t'+str(std_v[i])+'\n')
         resultfile.close()
 
     def Parcellation_agg(self, coordinate, Connectivity, Excluded_seeds, NbrRegion, SM_method, Mesh_plot, cvth):
 	# diffusion coordinates, mesh connectivity , array of exclueded seeds, array of nbr of regions, array of similarity measures, mesh used
 	# to generate vtk files, variation coefficient threshold
-        all_S = range(len(coordinate[:, 0]))  # they will be removed from the coordinates
-        Label_non_excluded = list(set(all_S))
+        all_Seeds = range(len(coordinate[:, 0]))  # they will be removed from the coordinates
+        nbr_seedsX = len(all_Seeds)  # number of vertices
+        Label_non_excluded = list(set(all_Seeds))
         if len(Excluded_seeds) > 0:  # if some seeds are exclude from the parcellation
-	   Label_non_excluded = list(set(all_S) - set(Excluded_seeds))  # and the tess conneectivity matrix
+	   Label_non_excluded = list(set(all_Seeds) - set(Excluded_seeds))  # and the tess conneectivity matrix
 	   Coord_non_excluded = coordinate[np.array(Label_non_excluded), :]
 	   Connectivity = Connectivity[np.array(Label_non_excluded), :]
 	   Connectivity = Connectivity[:, np.array(Label_non_excluded)]
 	   coordinate = Coord_non_excluded
         Connectivity_X = deepcopy(Connectivity)# this mesh connectivity will not be modefied used at the end of the code to merge the small regions
 	mesh = RP.Mesh(coordinate,[],[], Connectivity)  # create an object containing the coordinate and mesh connectivity
-	# prepare the parcellation by seeting the different paths
+	# Prepare the parcellation by seeting the different paths
+	printData = {}
+	printData['Loading tractograms '] = str(nbr_seedsX)
+	self.PrintResults(printData)
 	Parc = PT.Parcellation_data(self.path_tractogram, self.Prefix_name, mesh, self.nodif_mask)
-	Parc.Repeated_Coordinate(coordinate)
+	# Parc.Repeated_Coordinate(coordinate)
 	Parc.Detect_void_tracto()  # detect zero tracto ( tractogram that has sum less than 3*max(tractogram))
 	if len(Parc.zero_tracto) > 0:  # if there are void tractograms
 		Parc.Replace_void_tracto()  # replace void tractograms by the nearest neighbor non void
 		mesh.Remove_void_tracto(Parc.zero_tracto, Parc.nonzero_tracto)  # remove the void tractogram to speed up the computation.
-	printData = {} # This dictionary is used to save the different results to be printed in the terminal
-	printData['# excluded seeds:'] = len(Excluded_seeds)
+	printData = {} # This dictionary is used to save the different results to be printed in the terminal if verbose == true
+	printData['# Excluded seeds:'] = len(Excluded_seeds)
 	printData['Path to tractogram:'] = self.path_tractogram
 	printData['Prefix name:'] = self.Prefix_name
 	printData['Path to nodif mask:'] = self.nodif_mask
 	printData['Save path:'] = self.save_path
-	printData['# tractograms, # Void tractograms'] = len(range(len(coordinate[:, 0]))), len(Parc.zero_tracto)
+	printData['# Tractograms, # Void tractograms'] = len(range(len(coordinate[:, 0]))), len(Parc.zero_tracto)
 
         Connectivity = deepcopy(mesh.connectivity)  # hard (not shallow) copy the new mesh connec after removing void tractogram used at each R and SM
         nbr_iteration = 100  # total number of iterations fixed, generally 50 is enough
@@ -108,8 +116,8 @@ class Parcellation():  # main class to parcellate the cortical surface
             Parc.Similarity_Matrix = np.eye(np.shape(Parc.Similarity_Matrix)[0])  # re initialize the Similarity_Matrix for the next similarity measure
             for R in NbrRegion:  # loop over the list containing the number of regions "R"
                 ATime = time.time()  # execution time for each loop
-                integrated_regions = round(0.06*(len(Parc.zero_tracto)+len(Parc.nonzero_tracto))/R)# merge at the end
-                self.save_results_path = self.save_path+"/"+SM+"/"+str(R)                                   # regions that have size less than 10 %
+                integrated_regions = round((len(Parc.zero_tracto)+len(Parc.nonzero_tracto))/(10*R)) # merge at the end regions that have size less than 10 %
+                self.save_results_path = self.save_path+"/"+SM+"/"+str(R)  # folder where to save results
                 if not os.path.exists(self.save_results_path):  # the cortical regions
                     os.makedirs(self.save_results_path) # create the folder is not found
 
@@ -117,7 +125,7 @@ class Parcellation():  # main class to parcellate the cortical surface
                 Reg = RP.Regions_processing(nbr_seeds)  # initialize the class to handle regions
                 Regions = Reg.regions  # initialize regions, each seed is a region.
                 NBR_REGIONS = nbr_seeds  # init the nbr of regions
-                region_th = np.float32(nbr_seeds)/R        # number used to stop growing big regions
+                region_th = round(np.float32(nbr_seedsX-len(Excluded_seeds))/R)        # number used to stop growing big regions
                 nbr_remaining = nbr_iteration # initialize the remaining number of iterations
                 region_labels = range(nbr_seeds) # inital labeling
                 mesh.connectivity = deepcopy(Connectivity) # re initialize the mesh connectivity
@@ -128,6 +136,7 @@ class Parcellation():  # main class to parcellate the cortical surface
                 printData['# Region'] = R
                 printData['Similarity Measure'] = SM
                 printData['# Iterations'] = nbr_iteration
+                printData['Stop merging at'] = region_th
                 self.PrintResults(printData) # disply results if verbose is active
                 while nbr_remaining > 0:  # nbr of iteration
                     printData = {} # dictionary used to display results
@@ -153,22 +162,24 @@ class Parcellation():  # main class to parcellate the cortical surface
                     RegionsX = np.array(Regions)
                     for i in range(len(region_labels)):  # check if the mutual nearest neighbor condition is valid
                         Reg_cond = Merg_Condidates[i] # candidates of merging to region i
-                        for u in Reg_cond:
-                            Reg_list = Merg_Condidates[u]
-                            if i in Reg_list: # if region i is also a condidate of merging to region u
-                                a = np.where(np.array(Regions) == region_labels[i])[0] # get seeds with label  region_labels[i]
-                                b = np.where(np.array(Regions) == u)[0] # get seeds with label  u
-                                c = list(a) # merge region  region_labels[i] and u
-                                c.extend(list(b))
-                                RegionsX[np.array(c)] = region_labels[i] # change the label of region u and region_labels[i] to region_labels[i]
-                                #   Stop region growing.
-                                cv_array = Parc.Similarity_Matrix[np.array(c), :] # get the similarity measure of the new merged region
-                                cv_array = cv_array[:, np.array(c)]
-                                cv_array = cv_array.reshape(-1)
-                                if len(c) >= region_th or cv(cv_array) >= cvth:  # stop growing region i if it contains more than region_th seeds
-                                    mesh.connectivity[c, :] = np.zeros(np.shape(mesh.connectivity[c, :]))  # by setting rows and columns of region i
-                                    mesh.connectivity[:, c] = np.zeros(np.shape(mesh.connectivity[:, c]))  # to zero
-                                break # go to the next region
+                        a = np.where(np.array(Regions) == region_labels[i])[0] # get seeds with label  region_labels[i]
+                        if len(a) < region_th:
+                            for u in Reg_cond:
+                                Reg_list = Merg_Condidates[u]
+                                if i in Reg_list: # if region i is also a condidate of merging to region u
+                                    a = np.where(np.array(Regions) == region_labels[i])[0] # get seeds with label  region_labels[i]
+                                    b = np.where(np.array(Regions) == u)[0] # get seeds with label  u
+                                    c = list(a) # merge region  region_labels[i] and u
+                                    c.extend(list(b))
+                                    RegionsX[np.array(c)] = region_labels[i] # change the label of region u and region_labels[i] to region_labels[i]
+                                    #   Stop region growing.
+                                    cv_array = Parc.Similarity_Matrix[np.array(c), :] # get the similarity measure of the new merged region
+                                    cv_array = cv_array[:, np.array(c)]
+                                    cv_array = cv_array.reshape(-1)
+                                    if (len(c) > region_th or cv(cv_array) > cvth):  # stop growing region i if it contains more than region_th seeds
+                                        mesh.connectivity[c, :] = np.zeros(np.shape(mesh.connectivity[c, :]))  # by setting rows and columns of region i
+                                        mesh.connectivity[:, c] = np.zeros(np.shape(mesh.connectivity[:, c]))  # to zero
+                                    break # go to the next region
 
                     Regions = np.array(RegionsX)
                     SM_vector=self.Statistics_SM(Parc,Regions) # get the similarity values of all pairs inside each region
@@ -186,7 +197,8 @@ class Parcellation():  # main class to parcellate the cortical surface
                     mean_v.append(np.mean(SM_vector))  # add the mean of the SM values
                     std_v.append(np.std(SM_vector))   # add the std of the SM values
                     Labels.append(Label_all)
-                    printData['Iter, # Reg, time(m), mean, std'] = nbr_iteration-nbr_remaining, NBR_REGIONS, format(t[-1], '.3f'), format(mean_v[-1], '.3f'), format(std_v[-1], '.3f')
+                    nbr="%03d" % (nbr_iteration-nbr_remaining)
+                    printData['Iter ,# Reg ,time(m) ,mean ,std'] = nbr , NBR_REGIONS, format(t[-1], '.3f'), format(mean_v[-1], '.3f'), format(std_v[-1], '.3f')
                     self.PrintResults(printData) # print results at each iteration if verbose is true
 
                 # add the zero tractogram to the nearest non zero tractogram that is labeled
@@ -201,19 +213,20 @@ class Parcellation():  # main class to parcellate the cortical surface
                     SizeRegion[i] = len(index) # get the size of the regions
                     Regions[np.array(index)] = i
 
-                if self.merge:
+                if self.merge == 1:
                     Regions = self.Merge_till_R(Parc, SimilarityMeasure, Reg, SizeRegion, Regions, mesh, R) # merge small regions with the nearest region (highest SM) to have R nbr of regions
-                else:
+                elif self.merge == 0:
                     Regions = self.Small_Region_st(Parc, SimilarityMeasure, Reg, SizeRegion, Regions, mesh, integrated_regions) # merge small regions with the nearest region (highest SM)
-
+                else:
+                    pass
                 Reg_sm = self.Statistics_SM(Parc,Regions) # extract the SM as a vector of the last label
                 nbr_r.append(len(np.unique(Regions)))  # append the nbr of regions
                 t.append((time.time()-ATime)/60)  # add execution time to the current parcellation
                 mean_v.append(np.mean(Reg_sm))  # add the mean of the SM values
                 std_v.append(np.std(Reg_sm))   # add the std of the SM values
                 region_labels = np.unique(Regions)
-                Regions, NBR_REGIONS = self.Add_void(Parc, Reg, Regions, Excluded_seeds, Label_non_excluded)
-                Labels.append(Regions)
+                Regions, NBR_REGIONS = self.Add_void(Parc, Reg, Regions, Excluded_seeds, Label_non_excluded)# add the label to void seeds
+                Labels.append(Regions) # save the labels at each iteration
                 self.Write2file(SM, nbr_r, t, mean_v, std_v, R)  # save results in ./results.txt
                 np.savetxt(self.save_results_path+'/Labels_per_iteration.txt', np.transpose(Labels), fmt='%i', delimiter='\t')
                 WritePython2Vtk(self.save_results_path+'/Parcellation.vtk', Mesh_plot.vertices.T, Mesh_plot.faces.T, Mesh_plot.normal.T, Regions)  # save the final result in vtk
@@ -230,7 +243,7 @@ class Parcellation():  # main class to parcellate the cortical surface
                 sth = 0
                 insideregion, connected_regions = Reg.Neighbor_region(RegionsX, Reg_small[i], mesh) # get the neighbors and seeds of region Z[i]
                 for j in range(len(connected_regions)): # loop over all regions
-                    if connected_regions[j] != 0:
+                    if (connected_regions[j] != 0) and (connected_regions[j] not in Reg_small):
                         outeregion = np.where(RegionsX == connected_regions[j])[0]
                         S_mean = SimilarityMeasures(Parc, insideregion, outeregion)
                         if (S_mean > sth):  # if the region  connected_regions[j] and Z[i] have high similarity measure
@@ -273,8 +286,7 @@ class Parcellation():  # main class to parcellate the cortical surface
                         sth = S_mean #   merge Z[i] to connected_regions[j]
                         X = connected_regions[j] # merge Z[i] to connected_regions[j]
             RegionsX2 = np.array(RegionsX)
-            indx = np.where(RegionsX == Reg_small)[0]
-            RegionsX2[np.array(indx)] = X
+            RegionsX2[np.array(insideregion)] = X
             Un = np.unique(RegionsX2)# new unique labels
             nbr_r = len(Un) # new number of regions
             SizeRegion = np.zeros(nbr_r)

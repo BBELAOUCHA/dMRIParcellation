@@ -49,11 +49,7 @@ def WritePython2Vtk(filename, vertices, faces, normal, scalar, name_of_scalar="P
 def ReadVtk2Python(filename):
     #Read vtk file and output
     #Syntax:
-    #C,F,D,N=ReadVtk2Python(filename)
-    # C: coordinates (nbr of vertices * nbr of dimention)
-    # F: Faces    (nbr of faces * 3)
-    # D: Data     (nbr of vertices*1)
-    # N: Normals  (nbr of vertices * 3)
+    #Coordinates,Faces,Scalers,Normals=ReadVtk2Python(filename)
     #fo = open(filename, 'rw+')
     with open(filename) as f:
         mylist = f.read().splitlines()

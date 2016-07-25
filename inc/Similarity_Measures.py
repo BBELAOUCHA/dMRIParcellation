@@ -6,7 +6,7 @@
 # Nearest Neighbor Condition "see ref.3"
 
 # There are 6 functions (Similarity measures):
-#    1.Correlation (Pearson's)     4.Tanimoto_SM
+#    1.Correlation_SM (Pearson's)     4.Tanimoto_SM
 #    2.Ruzicka_SM                  5.Motyka_SM
 #    3.Cosine_SM                   6.Roberts
 #
@@ -20,9 +20,10 @@
 # belaoucha.brahim@etu.unice.fr
 # If you use this code, you have to cite 2 of the following work:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface Parcellation via dMRI Using Mutual
-#    Nearset Neighbor Condition”, International Symposium on Biomedical Imaging, Apr 2016, Prague, Czech Republic. 2016.
+#    Nearset Neighbor Condition”, International Symposium on Biomedical Imaging: From Nano to Macro, Prague,
+#    Czech Republic. pp. 903-906, April 2016.
 # Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced source space”, in
-#     International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), 2015.
+#   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), Utrecht, Netherlands, September 2015.
 
 # Author: Brahim Belaoucha 2015
 #         Théodore Papadopoulo 2015
@@ -132,8 +133,8 @@ def Motyka_SM(Parc, region1, region2):# Motyka similarity measures [0,..,1]
                 if np.isnan(q):
                     q = 0
                 S += q
-                Parc.Similarity_Matrix[i, j] = q
-                Parc.Similarity_Matrix[j, i] = q
+                Parc.Similarity_Matrix[i, j] = q*2
+                Parc.Similarity_Matrix[j, i] = q*2
     return S/(len(region1)*len(region2))
 
 

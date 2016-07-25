@@ -11,7 +11,10 @@
 # belaoucha.brahim@etu.unice.fr
 # If you use this code, you have to cite:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface Parcellation via dMRI Using Mutual
-#Nearset Neighbor Condition”, International Symposium on Biomedical Imaging, Apr 2016, Prague, Czech Republic. 2016.
+#    Nearset Neighbor Condition”, International Symposium on Biomedical Imaging: From Nano to Macro, Prague,
+#    Czech Republic. pp. 903-906, April 2016.
+# Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced source space”, in
+#   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), Utrecht, Netherlands, September 2015.
 # Author: Brahim Belaoucha 2015
 #         Théodore Papadopoulo 2015
 ######################################################################################
@@ -27,7 +30,7 @@ import Region_preparation as RP
 from Cortical_surface_parcellation import Parcellation as CSP
 
 # How to run:
-# python run_test.py -i input -o output -t tractogram -tb tracto prefix -seed coordinate -Ex excluded -sm Similarity measures
+# python run_Parcellation.py -i input -o output -t tractogram -tb tracto prefix -seed coordinate -Ex excluded -sm Similarity measures
 #                    -NR number of regions -cvth coeficient of variance -nodif mask
 
 
@@ -43,8 +46,9 @@ parser.add_argument('-NR', '--list', help='delimited list input', type=str) # li
 parser.add_argument('-cvth', action="store", dest='cv', type=float) # variation coefficient is used to stop merging regions with low homogeneity
 parser.add_argument('-nodif', action="store", dest='nodif') # path to the brain mask, the parcellation algorithm consider only voxels inside the brain mask
 parser.add_argument('-v', action="store", dest='verbose', type=int) # parameter used to enable results display
+parser.add_argument('-m', action="store", dest='merge', type=int) # parameter used to enable results display
 Arg = parser.parse_args() # read different parameters
-coordinate = np.loadtxt(str(Arg.coordinates), unpack=True, delimiter='\t', dtype=float).T # read the diffusion space coordinate of the seeds
+coordinate = np.loadtxt(str(Arg.coordinates), unpack=True, delimiter='\t', dtype=int).T # read the diffusion space coordinate of the seeds
 Cortex = h5py.File(str(Arg.input), 'r') # load the details of the mesh, coordinate, faces, normal, mesh connecticity.
 vertices_plot = np.array(Cortex['Vertices']) # get the coordinate in the anatomy image
 normal_plot=[]
@@ -54,15 +58,15 @@ faces_plot=[]
 if "Faces" in Cortex.keys():
     faces_plot = np.array(Cortex["Faces"], dtype=int)  # get faces of the mesh in the anatomical space.
 
-Connectivity=np.eye(np.max(np.shape(coordinate)))
+Connectivity=np.eye(np.max(np.shape(coordinate)),dtype=int)
 if "VertConn" in Cortex.keys():
     C = Cortex['VertConn'] # get the tess connectivity matrix
     D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))#
-    Connectivity = np.array(D_conenct.todense())
+    Connectivity = np.array(D_conenct.todense(), np.int8)
     del D_conenct, C, Cortex # delete unused dat
 Excluded_seeds=[] # default excluded seeds
 if Arg.excluded:
-    Excluded_seeds = np.loadtxt(Arg.excluded) # get the list of the excluded seeds
+    Excluded_seeds = np.loadtxt(Arg.excluded, dtype=int) # get the list of the excluded seeds
 ################ Parcellation starts here #########################################
 Verbose = False # by default dont display any results
 if Arg.verbose:
@@ -79,7 +83,11 @@ if Arg.list:
 SM = ['Cosine'] # Default similarity measure, cosine similarity
 if Arg.SM:
 	SM = [item for item in Arg.SM.split(',')] # list conatining the wanted similarity measures
+merge = 2
+if Arg.merge is not None:
+	merge = Arg.merge
 
-Parcel = CSP(Arg.tractograms, Arg.tract_name, Arg.save, Arg.nodif, Verbose) # initialize the parcellation by specifying the different paths
+Parcel = CSP(Arg.tractograms, Arg.tract_name, Arg.save, Arg.nodif, Verbose, merge) # initialize the parcellation by specifying the different paths
 Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot) # define the mesh to be used to generate the vtk file
+del vertices_plot, faces_plot, normal_plot
 Parcel.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, Regions, SM, Mesh_plot, cvth) # run the parcellation algorithm
