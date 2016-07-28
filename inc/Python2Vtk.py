@@ -33,16 +33,20 @@ def WritePython2Vtk(filename, vertices, faces, normal, scalar, name_of_scalar="P
     f.write(' POLYGONS '+str(nbr_faces)+' '+str(nbr_faces*4)+'\n')
     for i in range(nbr_faces):  # write faces
         face = faces[i, :]
-        f.write(str(3)+" "+str(face[0]-1)+' '+str(face[1]-1)+' '+str(face[2]-1)+'\n')
+        f.write(str(3)+" "+str(face[0])+' '+str(face[1])+' '+str(face[2])+'\n')
     f.write(' CELL_DATA '+str(nbr_faces)+'\n')
     f.write('POINT_DATA '+str(npoints)+'\n')
     f.write('SCALARS '+name_of_scalar+' float 1\n')
     f.write('LOOKUP_TABLE default\n')
     for i in range(npoints):
         f.write(str(scalar[i])+'\n')
-    f.write(' NORMALS normals float\n')
-    for i in range(npoints):
-        f.write(" "+str('%.4f' % normal[i, 0])+' '+str('%.4f' % normal[i, 1])+' '+str('%.4f' % normal[i, 2]))
+    if len(normal) > 0:
+        f.write(' NORMALS normals float\n')
+        for i in range(npoints):
+            if len(np.shape(normal)) == 2:
+                f.write(" "+str('%.4f' % normal[i, 0])+' '+str('%.4f' % normal[i, 1])+' '+str('%.4f' % normal[i, 2]))
+            else:
+                f.write(" "+str('%.4f' % normal[i]))
     f.close()
 
 
@@ -59,21 +63,23 @@ def ReadVtk2Python(filename):
     dim = len(mylist[5].split(" "))
     Coordinates = np.zeros((nbr_points, dim))
     for i in range(5, nbr_points+5):
-        Coordinates[i-5, :] = np.float32(mylist[i].split(" "))
+        Coordinates[i-5, :] = np.fromstring(mylist[i], dtype=float, sep=' ')#np.float32(mylist[i].split(" "))
     Polygon_x = mylist[nbr_points+5].split(" ")
     Polygon_x = np.int16(Polygon_x[-2])
     Faces = np.zeros((Polygon_x, 3), dtype=int)
     for i in range(nbr_points+6, nbr_points+6+Polygon_x):
-        F_i = mylist[i].split(" ")
+        F_i = np.fromstring(mylist[i], dtype=int, sep=' ')#mylist[i].split(" ")
         Faces[i-nbr_points-6, :] = F_i[1:len(F_i)]
     Data = np.zeros(nbr_points)
     for i in range(nbr_points+10+Polygon_x, 2*nbr_points+10+Polygon_x):
         Data[i-(nbr_points+10+Polygon_x)] = np.float32(mylist[i])
     Normal = []
-    if 'NORMALS' in mylist[2*nbr_points+10+Polygon_x].split(" "):
-        Normal = mylist[2*nbr_points+11+Polygon_x].split(" ")
-        NORMAL = []
-        for i in range(len(Normal)):
-            if Normal[i] != '':
-                NORMAL.append(np.float32(Normal[i]))
+    NORMAL = []
+    if len(mylist) >  2*nbr_points+10+Polygon_x:
+        if 'NORMALS' in mylist[2*nbr_points+10+Polygon_x].split(" "):
+            Normal = mylist[2*nbr_points+11+Polygon_x].split(" ")
+            NORMAL = []
+            for i in range(len(Normal)):
+                if Normal[i] != '':
+                    NORMAL.append(np.float32(Normal[i]))
     return Coordinates, Faces, Data, NORMAL
