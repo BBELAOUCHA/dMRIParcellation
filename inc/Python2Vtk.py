@@ -65,7 +65,7 @@ def ReadVtk2Python(filename):
     for i in range(5, nbr_points+5):
         Coordinates[i-5, :] = np.fromstring(mylist[i], dtype=float, sep=' ')#np.float32(mylist[i].split(" "))
     Polygon_x = mylist[nbr_points+5].split(" ")
-    Polygon_x = np.int16(Polygon_x[-2])
+    Polygon_x = np.uint32(Polygon_x[-2])
     Faces = np.zeros((Polygon_x, 3), dtype=int)
     for i in range(nbr_points+6, nbr_points+6+Polygon_x):
         F_i = np.fromstring(mylist[i], dtype=int, sep=' ')#mylist[i].split(" ")

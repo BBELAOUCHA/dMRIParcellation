@@ -133,3 +133,18 @@ class Regions_processing():  # functions on the regions
         for i in range(len(Labelnonexcluded)):
             Label[label_orig[i]] = Labelnonexcluded[i]
         return Label  # return the label with 0 for excluded seeds
+
+    def Check_Inside(self, Region, mesh):
+        Reg_unique = np.unique(Region)
+        for i in Reg_unique:
+            insideregion, connected_regions = self.Neighbor_region(Region, i, mesh)
+            if (len(connected_regions) == 1) and  (connected_regions[0] == 0):
+                index = np.where(Region == i)
+                Region[np.array(index)] = 0
+        NBR = np.unique(Region)
+        Label_all = Region
+        SizeRegion = np.zeros(len(NBR))
+        for i in range(len(NBR)):
+            index = np.where(Label_all == NBR[i])[0]
+            SizeRegion[i] = len(index) # get the size of the regions
+            Region[np.array(index)] = i

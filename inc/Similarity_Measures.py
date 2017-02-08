@@ -64,7 +64,10 @@ def Ruzicka_SM(Parc, region1, region2):# Ruzicka similarity measures [0,..,1]
                 T2 = Parc.tractograms[j] # get the jth tractogram
                 a = np.minimum(T1, T2)   # compute the Ruzicka similarity measure
 		b = np.maximum(T1, T2)
-                q = np.sum(a)/np.sum(b)
+		if np.sum(b) == 0:
+		    q = 0
+		else:
+                    q = np.sum(a)/np.sum(b)
                 if np.isnan(q): # if one of the tractogram is void
                     q = 0       # similarity measure value = 0
                 S += q          # sum of the similarity values between region 1 and 2
@@ -129,7 +132,10 @@ def Motyka_SM(Parc, region1, region2):# Motyka similarity measures [0,..,1]
                 T2 = Parc.tractograms[j]
                 a = np.minimum(T1, T2) # Compute Motyka similarity
                 b = np.add(T1, T2)
-                q = np.sum(a)/np.sum(b)
+                if np.sum(b) == 0:
+                    q = 0
+                else:
+                    q = np.sum(a)/np.sum(b)
                 if np.isnan(q):
                     q = 0
                 S += q
@@ -151,12 +157,14 @@ def Roberts_SM(Parc, region1, region2):# Roberts similarity measures [0,..,1]
                 b = np.add(T1, T2) # compute Roberts similarity
 		Q1 = np.minimum(T1, T2)
 		Q2 = np.maximum(T1, T2)
-                c = np.divide(Q1, Q2)
+                c = np.divide(Q1, Q2, dtype = float)
 		c[np.isnan(c)] = 0.0
                 a = np.multiply(b, c)
-                q = np.sum(a)/np.sum(b)
-                if np.isnan(q):
+                if np.sum(b) == 0:
                     q = 0
+                else:
+                    q = np.sum(a)/np.sum(b)
+
                 S += q
                 Parc.Similarity_Matrix[i, j] = q
                 Parc.Similarity_Matrix[j, i] = q

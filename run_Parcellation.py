@@ -57,7 +57,8 @@ if "VertNormals" in Cortex.keys():
 faces_plot=[]
 if "Faces" in Cortex.keys():
     faces_plot = np.array(Cortex["Faces"], dtype=int)  # get faces of the mesh in the anatomical space.
-    faces_plot = faces_plot - 1
+    if faces_plot.min() > 0:
+        faces_plot = faces_plot - 1
 Connectivity=np.eye(np.max(np.shape(coordinate)),dtype=int)
 if "VertConn" in Cortex.keys():
     C = Cortex['VertConn'] # get the tess connectivity matrix

@@ -9,7 +9,8 @@
 #  2-Read_tractograms: read and return all tractogram in vector form.
 #  3-Detect_void_tracto: detect viod tractogram (sum <3*nbr_samples)
 #  4-Replace_void_tracto: replace the viod tractograms with the nearest non viod tractograms
-#  5-Logit_function: compute the logit function of the tractogram (probability of structural connectivity)
+#  5-Logit_function: compute the logit function of the tractogram (probability of structural
+# connectivity)
 #####################################################################################
 # BELAOUCHA Brahim
 # Copyright (C) 2015 Belaoucha Brahim
@@ -22,8 +23,9 @@
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface Parcellation via dMRI Using Mutual
 #    Nearset Neighbor Condition”, International Symposium on Biomedical Imaging: From Nano to Macro, Prague,
 #    Czech Republic. pp. 903-906, April 2016.
-# Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced source space”, in
-#   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), Utrecht, Netherlands, September 2015.
+# Brahim Belaoucha and Théodore Papadopoulo,“MEG/EEG reconstruction in the reduced source space”, in
+#   International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), Utrecht,
+#    Netherlands, September 2015.
 # Author: Brahim Belaoucha 2015
 #         Théodore Papadopoulo 2015
 ######################################################################################
@@ -44,10 +46,11 @@ class Parcellation_data():
 	self.Similarity_Matrix = np.eye(len(mesh.vertices[:, 1]))   # matrix contains similarity measure values
 	self.excluded = []  # excluded seeds
 	self.nodif_mask = nodif_mask	 # path to the brain's mask, used to reduce the memory since all voxels of the tractograms outside the mask are0
-	MASK = nl.load(self.nodif_mask).get_data()
-	M = np.array(MASK.reshape(-1))
-	self.non_zeroMask = np.array(np.nonzero(M)[0])  # get the voxels of only the mask.
-	del MASK, M
+	if nodif_mask != '':
+           MASK = nl.load(self.nodif_mask).get_data()
+	   M = np.array(MASK.reshape(-1))
+	   self.non_zeroMask = np.array(np.nonzero(M)[0])  # get the voxels of only the mask.
+	   del MASK, M
 
     def Repeated_Coordinate(self, V):
 
@@ -77,12 +80,21 @@ class Parcellation_data():
 
     def Read_tractograms(self, V):
 	#read all the tractograms used in the cluster
-	self.tractograms = [] # array contains the tractograms in vector form
+	# zero void is defined as the tracto that is less than 3*nbr_samples.
+	self.zero_tracto = []	 # will contain void tractogram (tractograms with sum < 3*n_samples)
+	self.nonzero_tracto = []	 # will contain the non void tractogram
+	self.tractograms = []
 	for i in range(len(V[:, 0])): # loop over the coordinates
 	   x, y, z = V[i, :] # read the ith coordinate (x,y,z)
 	   filename = self.tract_path+'/'+self.tract_name+str(int(x))+'_'+str(int(y))+'_'+str(int(z))+'.nii.gz'
 	   A = nl.load(filename).get_data() # read the tractogram in nifti format (.nii.gz)
 	   T1 = A.reshape(-1) # from 3D to vector form
+	   self.nbr_sample = np.max(T1.reshape(-1)) # if all voxel = 0, nbr_sample = 0
+	   Sm = np.sum(T1)
+	   if (Sm <= self.nbr_sample*5):	 # detect void tractogram. It defined as the tractogram that has a sum
+                self.zero_tracto.extend([i]) # less then 5* number of samples
+           else:
+		self.nonzero_tracto.extend([i]) # add the ith seed to the non viod tractogram
 	   T2 = T1[np.array(self.non_zeroMask)] # read only the voxels inside the brain mask
 	   self.tractograms.append(T2) # add the ith tractogram
 	return self.tractograms # return the tractograms
@@ -102,9 +114,9 @@ class Parcellation_data():
                 self.zero_tracto.extend([i]) # less then 5* number of samples
             else:
 		self.nonzero_tracto.extend([i]) # add the ith seed to the non viod tractogram
-		T1 = T.reshape(-1)  # from 3D to a vector form
-		T2 = T1[np.array(self.non_zeroMask)] # read only the voxels that are inside the (brain) mask
-		self.tractograms.append(T2) # add the tractogram into an array of arrays
+	        T1 = T.reshape(-1)  # from 3D to a vector form
+	        T2 = T1[np.array(self.non_zeroMask)] # read only the voxels that are inside the (brain) mask
+	        self.tractograms.append(T2) # add the tractogram into an array of arrays
 
     def Replace_void_tracto(self):  # replace the void tractograms by the nearest neighbor non void
 
