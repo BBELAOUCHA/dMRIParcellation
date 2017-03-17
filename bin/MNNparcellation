@@ -30,6 +30,13 @@ import argparse
 from MNNparcellation.inc import Region_preparation as RP
 from MNNparcellation.inc.CSParcellation import Parcellation as CSP
 
+
+def check_input(Arg):
+    test = False
+    if Arg.save == None or Arg.tractograms == None or Arg.tract_name == None or \
+           Arg.coordinates == None or Arg.SM == None or Arg.NR == None:
+           test = True
+    return test
 # How to run:
 # MNNparcellation -i input -o output -t tractogram -tb tractoprefix -seed coordinates
 # -Ex excluded -sm Similarity measures -n number of regions -cvth coeficient of varianc
@@ -69,59 +76,66 @@ if __name__ == "__main__":
         help='path to excluded coordinates') # file that contain seeds to be excluded 
 
         Arg = parser.parse_args() # read different parameters
-	coordinate = np.loadtxt(str(Arg.coordinates), unpack=True, delimiter='\t', dtype=int).T 
-        x, y = np.shape(coordinate)
-        if y > x:
-            coordinate = coordinate.T
-        # read the diffusion space coordinate of the seeds
-	Cortex = h5py.File(str(Arg.input), 'r') 
-        # load the details of the mesh, coordinate, faces, normal, mesh connecticity.
-	vertices_plot = np.array(Cortex['Vertices']) 
-        # get the coordinate in the anatomy image
-	normal_plot, faces_plot, Excluded_seeds = [], [], []
+        if check_input(Arg):
+		print "Missing arguments check MNNparcellation --help"
+	else:
+		coordinate = np.loadtxt(str(Arg.coordinates), unpack=True, delimiter='\t',
+                                        dtype=int).T 
+		x, y = np.shape(coordinate)
+		if y > x:
+		    coordinate = coordinate.T
+		# read the diffusion space coordinate of the seeds
+		Cortex = h5py.File(str(Arg.input), 'r') 
+		# load the details of the mesh, coordinate, faces, normal, mesh connecticity.
+		vertices_plot = np.array(Cortex['Vertices']) 
+		# get the coordinate in the anatomy image
+		normal_plot, faces_plot, Excluded_seeds = [], [], []
 
-	if "VertNormals" in Cortex.keys():
-	    normal_plot = np.array(Cortex['VertNormals']) # get the normals in the anatomical space
+		if "VertNormals" in Cortex.keys():
+		    normal_plot = np.array(Cortex['VertNormals']) # get the normals in the anatomical space
 	
-	if "Faces" in Cortex.keys():
-	    faces_plot = np.array(Cortex["Faces"], dtype=int)  
-            # get faces of the mesh in the anatomical space.
-	    if faces_plot.min() > 0:
-		faces_plot = faces_plot - 1
-	Connectivity=np.eye(np.max(np.shape(coordinate)), dtype=int)
-	if "VertConn" in Cortex.keys():
-	    C = Cortex['VertConn'] # get the tess connectivity matrix
-	    D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))#
-	    Connectivity = np.array(D_conenct.todense(), np.int8)
-	    del D_conenct, C, Cortex # delete unused data for memory reason
+		if "Faces" in Cortex.keys():
+		    faces_plot = np.array(Cortex["Faces"], dtype=int)  
+		    # get faces of the mesh in the anatomical space.
+		    if faces_plot.min() > 0:
+			faces_plot = faces_plot - 1
+		Connectivity=np.eye(np.max(np.shape(coordinate)), dtype=int)
+		if "VertConn" in Cortex.keys():
+		    C = Cortex['VertConn'] # get the tess connectivity matrix
+		    D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))#
+		    Connectivity = np.array(D_conenct.todense(), np.int8)
+		    del D_conenct, C, Cortex # delete unused data for memory reason
 
-	if Arg.excluded:
-	    Excluded_seeds = np.loadtxt(Arg.excluded, dtype=int) # get the list of the excluded seeds
-	################ Parcellation starts here #########################################
-	Verbose = False # by default dont display any results
-	if Arg.verbose:
-		Verbose	= True # display results
+		if Arg.excluded:
+		    Excluded_seeds = np.loadtxt(Arg.excluded, dtype=int) # get the list of the excluded seeds
+		################ Parcellation starts here #########################################
+		Verbose = False # by default dont display any results
+		if Arg.verbose:
+			Verbose	= True # display results
 
-	cvth=np.Inf #default not included in the stopping criteria
-	if Arg.cv:
-		cvth = Arg.cv # default threshold used to stop merging regions with low homogeneity
+		cvth=np.Inf #default not included in the stopping criteria
+		if Arg.cv:
+			cvth = Arg.cv # default threshold used to stop merging regions with low homogeneity
 
-	Regions	= [len(coordinate[:,0])-len(Excluded_seeds)] # default number of regions
-	if Arg.NR:
-		Regions = [int(item) for item in Arg.NR.split(',')]
+		Regions	= [len(coordinate[:,0])-len(Excluded_seeds)] # default number of regions
+		if Arg.NR:
+			Regions = [int(item) for item in Arg.NR.split(',')]
 
-	SM = ['Cosine'] # Default similarity measure, cosine similarity
-	if Arg.SM:
-		SM = [item for item in Arg.SM.split(',')] 
-        # list conatining the wanted similarity measures
-	merge = 2
-	if Arg.merge is not None:
-		merge = Arg.merge
+		SM = ['Cosine'] # Default similarity measure, cosine similarity
+		if Arg.SM:
+			SM = [item for item in Arg.SM.split(',')] 
+		# list conatining the wanted similarity measures
+		merge = 2
+		if Arg.merge is not None:
+			merge = Arg.merge
 
-	Parcel = CSP(Arg.tractograms, Arg.tract_name, Arg.save, Arg.nodif, Verbose, merge) 
-        # initialize the parcellation by specifying the different paths
-	Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot) 
-        # define the mesh to be used to generate the vtk file
-	del vertices_plot, faces_plot, normal_plot
-	Parcel.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, Regions, SM, Mesh_plot, cvth)
-        # run the parcellation algorithm
+		Parcel = CSP(Arg.tractograms, Arg.tract_name, Arg.save, Arg.nodif,
+                             Verbose, merge) 
+		# initialize the parcellation by specifying the different paths
+		Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot) 
+		# define the mesh to be used to generate the vtk file
+		del vertices_plot, faces_plot, normal_plot
+		Parcel.PrepareData(coordinate, Connectivity, Excluded_seeds)
+		Parcel.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, 
+ 					Regions, SM, Mesh_plot, cvth)
+		# run the parcellation algorithm

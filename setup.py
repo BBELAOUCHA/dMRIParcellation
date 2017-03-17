@@ -15,7 +15,7 @@ setup(name=package_name,
       version='0.1',
       description='A tool to parcellate the cortical surface into\
                    regions using tractograms obtained from dMRI',
-      url='http://github.com/',
+      url='https://github.com/BBELAOUCHA/dMRIParcellation',
       author='Brahim Belaoucha',
       author_email='brahim.belaoucha@inria.fr',
       packages=[package_name,inc_module],
