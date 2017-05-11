@@ -12,6 +12,7 @@ from termcolor import colored
 import warnings
 warnings.filterwarnings("ignore")
 
+
 def co_shape(A, B):
     if np.shape(A) == np.shape(B):
         return A, B, 1
@@ -22,6 +23,7 @@ def co_shape(A, B):
     else:
     	return A, B, 0
 
+
 def test_python2vtk():
     " Test read and write vtk files "
     nbr_sources = 100
@@ -29,13 +31,13 @@ def test_python2vtk():
     faces = np.random.randint(nbr_sources, size=(nbr_sources*2, 3))
     normal = np.array(np.random.randn(nbr_sources), dtype=np.float64)
     scalar = range(nbr_sources)
-    f = TP.NamedTemporaryFile(delete = True, suffix = '.vtk', dir = './data/')
+    f = TP.NamedTemporaryFile(delete=True, suffix='.vtk', dir='./data/')
     # write vtk file
     PY.WritePython2Vtk(f.name, vertices, faces, normal, scalar, name_of_scalar="Parcels")
     # read vtk file
-    Coordinates,Faces,Scalers,Normal = PY.ReadVtk2Python(f.name)
-    Coordinates, vertices, t_c =co_shape(Coordinates, vertices)
-    Faces, faces, t_f =co_shape(Faces, faces)
+    Coordinates, Faces, Scalers, Normal = PY.ReadVtk2Python(f.name)
+    Coordinates, vertices, t_c = co_shape(Coordinates, vertices)
+    Faces, faces, t_f = co_shape(Faces, faces)
     dec = 4
     if t_f*t_c == 0:
     	return False
@@ -46,6 +48,7 @@ def test_python2vtk():
     	np.testing.assert_almost_equal(Normal, normal, decimal=dec)
 	return True
 
+
 def test_similarity():
 	" Test similarity measures "
         nbr_seeds = 100
@@ -53,15 +56,15 @@ def test_similarity():
 	seed_reg = nbr_seeds/n_reg
 	Label = np.zeros(nbr_seeds, dtype=int)
 	Connectivity = np.array(np.eye(nbr_seeds))
-	coordinate = np.array(np.zeros((nbr_seeds,3)))
+	coordinate = np.array(np.zeros((nbr_seeds, 3)))
 	nbr_partical = 1000
 	tracto = []
 	for i in range(n_reg):
 		Label[i * seed_reg:(i + 1)*seed_reg] = i
-		Connectivity[i * seed_reg:(i + 1)*seed_reg,i * seed_reg:(i + 1)*seed_reg] = 1
+		Connectivity[i * seed_reg:(i + 1)*seed_reg, i * seed_reg:(i + 1)*seed_reg] = 1
 		for j in range(seed_reg):
 			tracto.append((i+1)*np.ones(nbr_partical))
-	sim = CSP.Parcellation("","","","", write_data=True)
+	sim = CSP.Parcellation("", "", "", "", write_data=True)
 	sim.save_path = './data/'
 	Excluded_seeds = []
 	sim.PrepareData(coordinate, Connectivity, Excluded_seeds)
@@ -78,7 +81,7 @@ def test_similarity():
 	sim.mesh.normal = normal
 	sim.mesh.vertices = coordinate
 	sim.mesh.connectivity = Connectivity
-	SM_method = ['Correlation', 'Cosine', 'Tanimoto', 'Ruzicka', 'Motyka','Roberts']
+	SM_method = ['Correlation', 'Cosine', 'Tanimoto', 'Ruzicka', 'Motyka', 'Roberts']
 	Test = {}
 	for Q in SM_method:
 	    sim.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, [n_reg], [Q], sim.mesh, np.inf)
