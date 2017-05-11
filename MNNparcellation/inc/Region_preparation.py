@@ -36,14 +36,15 @@
 '''
 import numpy as np
 
+
 class Mesh():  # class definition of mesh:-coordinates and tess connectivity
 
-    def __init__(self, vertices, faces=[], normal=[],connectivity=[]):
+    def __init__(self, vertices, faces=[], normal=[], connectivity=[]):
 
-        self.vertices = vertices # coordinates in the diffusion space
-        self.connectivity = connectivity # mesh tess connectivity matrix
-        self.faces = faces # faces of the mesh
-        self.normal = normal # normal of the mesh
+        self.vertices = vertices  # coordinates in the diffusion space
+        self.connectivity = connectivity  # mesh tess connectivity matrix
+        self.faces = faces  # faces of the mesh
+        self.normal = normal  # normal of the mesh
 
     def Remove_void_tracto(self, zero_tracto, nonzero_tracto):
         # remove the void seeds from the parcellation
@@ -51,8 +52,9 @@ class Mesh():  # class definition of mesh:-coordinates and tess connectivity
         self.connectivity = self.connectivity[nonzero_tracto, :]
         # to speed up the computation and for less memory.
         self.connectivity = self.connectivity[:, nonzero_tracto]
-        self.vertices = self.vertices[nonzero_tracto, :] # remove void seeds
+        self.vertices = self.vertices[nonzero_tracto, :]  # remove void seeds
         # void tractograms are removed from the computation
+
 
 class Regions_processing():  # functions on the regions
 
@@ -67,7 +69,7 @@ class Regions_processing():  # functions on the regions
         # Neighboring regions of region index
             # vector containg labels, region of interest, mesh details (coordinate
             # and tess connectivity)
-            insideregion = np.where(np.array(Regions) == index)[0] # neighbors index
+            insideregion = np.where(np.array(Regions) == index)[0]  # neighbors index
             I = mesh.connectivity[insideregion]  # get connection to region  i
             I = np.squeeze(I)
             q = set(np.unique(np.where(I == 1)[len(insideregion) > 1]))
@@ -147,7 +149,7 @@ class Regions_processing():  # functions on the regions
         # function used to add the label of the # excluded seeds
         #(0 label) to the label of the non void seeds
         #label of excluded seeds, label of non excluded seeds, seeds non excluded
-        if len(excluded) == 0: #excluded 0 label to the label of the non void seeds
+        if len(excluded) == 0:  # excluded 0 label to the label of the non void seeds
             return Labelnonexcluded
         Label = np.zeros(len(excluded)+len(Labelnonexcluded))
         for i in xrange(len(Labelnonexcluded)):

@@ -5,6 +5,7 @@ import numpy as np
 # ReadVtk2Python: Read .vtk file in python "it was created by WritePython2Vtk"
 #Created by Brahim Belaoucha on 2014/02/01
 
+
 def WritePython2Vtk(filename, vertices, faces, normal, scalar,
                     name_of_scalar="Parcels"):
     #save the mesh into vtk ascii file
@@ -43,7 +44,7 @@ def WritePython2Vtk(filename, vertices, faces, normal, scalar,
         f.write(' NORMALS normals float\n')
         for i in range(npoints):
             if len(np.shape(normal)) == 2:
-                f.write(" "+str('%.4f' % normal[i, 0])+' '+
+                f.write(" "+str('%.4f' % normal[i, 0])+' ' +
                 str('%.4f' % normal[i, 1])+' '+str('%.4f' % normal[i, 2]))
             else:
                 f.write(" "+str('%.4f' % normal[i]))
@@ -69,14 +70,14 @@ def ReadVtk2Python(filename):
     Polygon_x = np.uint32(Polygon_x[-2])
     Faces = np.zeros((Polygon_x, 3), dtype=int)
     for i in range(nbr_points+6, nbr_points+6+Polygon_x):
-        F_i = np.fromstring(mylist[i], dtype=int, sep=' ')#mylist[i].split(" ")
+        F_i = np.fromstring(mylist[i], dtype=int, sep=' ')  # mylist[i].split(" ")
         Faces[i-nbr_points-6, :] = F_i[1:len(F_i)]
     Data = np.zeros(nbr_points)
     for i in range(nbr_points+10+Polygon_x, 2*nbr_points+10+Polygon_x):
         Data[i-(nbr_points+10+Polygon_x)] = np.float32(mylist[i])
     Normal = []
     NORMAL = []
-    if len(mylist) >  2*nbr_points+10+Polygon_x:
+    if len(mylist) > 2*nbr_points+10+Polygon_x:
         if 'NORMALS' in mylist[2*nbr_points+10+Polygon_x].split(" "):
             Normal = mylist[2*nbr_points+11+Polygon_x].split(" ")
             NORMAL = []
