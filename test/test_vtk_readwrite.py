@@ -1,14 +1,14 @@
 # thic code is used to test Python2Vtk.py read and write function
 import sys
 sys.path.append('../inc/')
-import Python2Vtk as PY
+from MNNparcellation import Python2Vtk as PY
 import tempfile as TP
 import numpy as np
 import numpy.testing as npt
 
-def test_shape(A, B):
+def co_shape(A, B):
 	if np.shape(A) == np.shape(B):
-             	return A, B, 1 
+             	return A, B, 1
 
         elif np.shape(A) == np.shape(B.T):
 		return A, B.T, 1
@@ -27,8 +27,8 @@ def test_python2vtk():
         PY.WritePython2Vtk(f.name, vertices, faces, normal, scalar, name_of_scalar="Parcels")
 	# read vtk file
         Coordinates,Faces,Scalers,Normal = PY.ReadVtk2Python(f.name)
-      	Coordinates, vertices, t_c =test_shape(Coordinates, vertices)
-	Faces, faces, t_f =test_shape(Faces, faces)
+      	Coordinates, vertices, t_c =co_shape(Coordinates, vertices)
+	Faces, faces, t_f =co_shape(Faces, faces)
 	dec = 4
         if t_f*t_c == 0:
         	return False

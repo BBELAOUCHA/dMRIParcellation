@@ -11,7 +11,10 @@ def mat2cond_index(n,  i,  j):
         matrix. '''
     ix = min(i, j)
     iy = max(i, j)
-    return n * ix - (ix * (ix + 1) / 2) + (iy - ix - 1)
+    nv = n * ix - (ix * (ix + 1) / 2) + (iy - ix - 1)
+    if nv >= (n*(n-1)/2):
+          print "Index is out of range in the SM vector"
+    return nv
 
 def vec2symmetric_mat(V, n):
     ''' Write vector to matrix '''

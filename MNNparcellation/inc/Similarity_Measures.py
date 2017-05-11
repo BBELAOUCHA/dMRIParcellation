@@ -1,42 +1,40 @@
 # -*- coding: utf-8 -*-
-#####################################################################################
+'''
+###################################################################################
 #
-# This code contain the different similarity measure used in the cortical surface
-#parcellation from dMRI information (tractograms in nii.gz files) using the Mutual
-# Nearest Neighbor Condition "see ref.3"
+#This code contain the different similarity measure used in the cortical surface
+#parcellation from dMRI information (tractograms in nii.gz files) using the
+# Mutual Nearest Neighbor Condition
 
 # There are 6 functions (Similarity measures):
-#    1.Correlation_SM (Pearson's)     4.Tanimoto_SM
-#    2.Ruzicka_SM                  5.Motyka_SM
-#    3.Cosine_SM                   6.Roberts
+#    1. Correlation_SM (Pearson's)  4.Tanimoto_SM
+#    2. Ruzicka_SM                  5. Motyka_SM
+#    3. Cosine_SM                   6. Roberts_SM
 #
-#####################################################################################
+###################################################################################
 # BELAOUCHA Brahim
-# Copyright (C) 2015 Belaoucha Brahim
 # Version 1.0
 # Inria Sophia Antipolis
 # University of Nice Sophia Antipolis
 # brahim.belaoucha@inria.fr
 # belaoucha.brahim@etu.unice.fr
-# If you use this code, you have to cite 2 of the following work:
+# If you use this code, please acknowledge Brahim Belaoucha. The best single reference is:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface Parcell
 # ation via dMRI Using Mutual Nearset Neighbor Condition”, International Symposium on
-# Biomedical Imaging: From Nano to Macro, Prague, Czech Republic. pp. 903-906,Ap2016.
-# Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the reduced
-# source space”, International Conference on Basic and Clinical Multimodal Imaging
-# (BaCi 2015), Utrecht, Netherlands, September 2015.
+# Biomedical Imaging: From Nano to Macro, Prague, Czech Republic. pp. 903-906,Apr 2016.
 
 # Author: Brahim Belaoucha 2015
-#         Théodore Papadopoulo 2015
-######################################################################################
+# Any questions, please contact brahim.belaoucha@gmail.com
+###################################################################################
+'''
 import numpy as np
 from scipy.stats import pearsonr
-from util import cond2mat_index, mat2cond_index
+from util import mat2cond_index
 
 
 def Correlation_SM(Parc, region1, region2):
-    # this function computes the average correlation between regions region1, region2
-    # Sum (corr(region1_i,region2_j))/total number of combinations
+    # computes the average correlation between regions region1, region2
+    # Sum(corr(region1_i,region2_j))/total number of combinations
     S = 0 # initialize the mean similarity value between region1 and region2
     n = Parc.nbr_seeds
     for i in region1: # loop over the region 1
@@ -52,12 +50,12 @@ def Correlation_SM(Parc, region1, region2):
                     a = 0       # zero
                 S += a          # add value to compute the mean similarity measure
                 Parc.Similarity_Matrix[ix] = a # write the similarity value in
-                #Parc.Similarity_Matrix[j, i] = a # the similarity matrix (symmetric)
+
     return S/(len(region1)*len(region2)) # return the mean similarity value
 
 
-def Ruzicka_SM(Parc, region1, region2):# Ruzicka similarity measures [0,..,1]
-
+def Ruzicka_SM(Parc, region1, region2):
+    # Compute Ruzicka similarity measures between two regions. values in [0,..,1]
     S = 0.0 # initialize the mean similarity value between region1 and region2
     n = Parc.nbr_seeds
     for i in region1: # loop over the 1st region
@@ -73,13 +71,14 @@ def Ruzicka_SM(Parc, region1, region2):# Ruzicka similarity measures [0,..,1]
 		q = 0.0
 		if np.sum(b) is not 0.0:
 		    q = np.sum(a)/np.sum(b)
-                S += q          # sum of the similarity values between region 1 and 2
+                S += q  # sum of the similarity values between region 1 and 2
                 Parc.Similarity_Matrix[ix] = q # write value in similarity matrix
                 #Parc.Similarity_Matrix[j, i] = q # matrix is symmetric
     return S/(len(region1)*len(region2)) # return the mean similarity value
 
 
-def Cosine_SM(Parc, region1, region2):# Cosine similarity measures [0,..,1]
+def Cosine_SM(Parc, region1, region2):
+    # Cosine similarity measures [0,..,1]
     S = 0.0 # initialize the mean similarity value between region1 and region2
     n = Parc.nbr_seeds
     for i in region1: # loop over region 1
@@ -94,16 +93,17 @@ def Cosine_SM(Parc, region1, region2):# Cosine similarity measures [0,..,1]
                 a = np.linalg.norm(T1)
                 b = np.linalg.norm(T2)
                 q = 0.0
-                x = a * b
-                if x is not 0.0:
-                    q = A/x
+                if a*b != 0.0:
+                    q = A/(a * b)
+
                 S += q # sum of similarity measure
                 Parc.Similarity_Matrix[ix] = q # write into similarity matrix
-                #Parc.Similarity_Matrix[j, i] = np.float16(q)
-    return S/(len(region1)*len(region2)) # mean similarity measure between region 1&2
+
+    return S/(len(region1)*len(region2)) # mean similarity between region 1&2
 
 
-def Tanimoto_SM(Parc, region1, region2):# Tanimoto similarity measures [0,..,1]
+def Tanimoto_SM(Parc, region1, region2):
+    # Tanimoto similarity measures [0,..,1]
     S = 0.0 # initialize the mean similarity value between region1 and region2
     n = Parc.nbr_seeds
     for i in region1:
@@ -119,16 +119,17 @@ def Tanimoto_SM(Parc, region1, region2):# Tanimoto similarity measures [0,..,1]
                 b = np.linalg.norm(T2)**2
                 x = (a + b - A)
                 q = 0.0
-                if x is not 0.0:
+                if x != 0.0:
                     q = A/x
+
                 S += q
                 Parc.Similarity_Matrix[ix] = np.float16(q)
-                #Parc.Similarity_Matrix[j, i] = q
+
     return S/(len(region1)*len(region2))
 
 
-def Motyka_SM(Parc, region1, region2):# Motyka similarity measures [0,..,1]
-
+def Motyka_SM(Parc, region1, region2):
+    # Motyka similarity measures [0,..,1]
     S = 0.0 # initialize the mean similarity value between region1 and region2
     n = Parc.nbr_seeds
     for i in region1:
@@ -146,12 +147,12 @@ def Motyka_SM(Parc, region1, region2):# Motyka similarity measures [0,..,1]
                     q = np.sum(a)/np.sum(b)
                 S += q
                 Parc.Similarity_Matrix[ix] = q*2
-                #Parc.Similarity_Matrix[j, i] = q*2
+
     return S/(len(region1)*len(region2))
 
 
-def Roberts_SM(Parc, region1, region2):# Roberts similarity measures [0,..,1]
-
+def Roberts_SM(Parc, region1, region2):
+    # Roberts similarity measures [0,..,1]
     S = 0.0 # initialize the mean similarity value between region1 and region2
     n = Parc.nbr_seeds
     for i in region1:
@@ -175,5 +176,5 @@ def Roberts_SM(Parc, region1, region2):# Roberts similarity measures [0,..,1]
 
                 S += q
                 Parc.Similarity_Matrix[ix] = q
-                #Parc.Similarity_Matrix[j, i] = q
+
     return S/(len(region1)*len(region2))

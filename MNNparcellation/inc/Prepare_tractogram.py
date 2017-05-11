@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-#################################################################################
+'''
+###################################################################################
 #
 # This code is used to prepare the parcellation of the cortical surface from dMRI
 # (tractograms in nii.gz) using the Mutual Nearest Neighbor Condition "see ref."
@@ -10,28 +11,25 @@
 #  3-Detect_void_tracto: detect viod tractogram (sum <3*nbr_samples)
 #  4-Replace_void_tracto: replace the viod tractograms with the nearest non viod
 #                         tractograms
-#  5-Logit_function: compute the logit function of the tractogram (probability of
-#                         structural connectivity)
-#################################################################################
+
+###################################################################################
 # BELAOUCHA Brahim
-# Copyright (C) 2015 Belaoucha Brahim
 # Version 1.0
 # Inria Sophia Antipolis
 # University of Nice Sophia Antipolis
 # brahim.belaoucha@inria.fr
 # belaoucha.brahim@etu.unice.fr
-# If you use this code, you have to cite 2 of the following:
+# If you use this code, please acknowledge Brahim Belaoucha.
+# The best single reference is:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface
 # Parcellation via dMRI Using Mutual Nearset Neighbor Condition”, International
 # Symposium on Biomedical Imaging: From Nano to Macro, Prague, Czech Republic.
 # pp. 903-906, April 2016.
-# Brahim Belaoucha and Théodore Papadopoulo,“MEG/EEG reconstruction in the reduced
-# source space”, International Conference on Basic and Clinical Multimodal Imaging
-# (BaCi 2015), Utrecht, Netherlands, September 2015.
+
 # Author: Brahim Belaoucha 2015
-
-##################################################################################
-
+# Any questions, please contact brahim.belaoucha@gmail.com
+###################################################################################
+'''
 from copy import deepcopy
 import numpy as np
 import nibabel as nl
@@ -44,9 +42,10 @@ class Parcellation_data():
 
 	self.tract_path = tract_folder_path  # path to tractogram
 	self.tract_name = tract_name  # prefix tractogram
-	self.mesh = mesh	 # mesh details coordinates and tess connectivity
-	nbr = len(mesh.vertices[:, 1])
-	self.Similarity_Matrix = np.zeros(nbr*(nbr-1)/2, dtype = np.float16)
+	if mesh:
+	   self.mesh = mesh	 # mesh details coordinates and tess connectivity
+	   nbr = len(mesh.vertices[:, 1])
+	   self.Similarity_Matrix = np.zeros(nbr*(nbr-1)/2, dtype = np.float16)
 	# matrix contains similarity measure values
 	self.excluded = []  # excluded seeds
 	self.nodif_mask = nodif_mask
@@ -59,27 +58,6 @@ class Parcellation_data():
 	   # get the voxels of only the mask.
 	   del MASK, M
 
-    def Repeated_Coordinate(self, V):
-
-        self.non_duplicated={}
-        for i in np.arange(np.max(np.shape(V))):
-            v=V[i,:]
-            B=np.subtract(V, v)
-            C=np.add(np.add(np.absolute(B[:,0]),np.absolute(B[:,1])),
-                     np.absolute(B[:,2]))
-            D=np.where(C == 0)[0]
-            for j in xrange(len(D)):
-                if D[j] not in self.non_duplicated.keys():
-                        self.non_duplicated[D[j]] = i
-        Q2=np.unique(self.non_duplicated.values())
-        self.coordinate_2_read=[]
-        self.ind_2_loaded={}
-        for i in xrange(len(Q2)):
-            self.ind_2_loaded[Q2[i]] = i
-            self.coordinate_2_read.append(V[Q2[i],:])
-        #return self.non_duplicated,self.ind_2_loaded[self.non_duplicated]
-
-
     def Read_tracto(self, V): # function used to read  tractogram in 3D
 	# read the nii.gz tractogram files one by one
 	x, y, z = V # extract the x,y,z coordinate
@@ -90,32 +68,32 @@ class Parcellation_data():
         else:
             return np.array([0])
 
-    def Read_tractograms(self, V, min_vox = 5):
-	#read all the tractograms used in the cluster
-	# zero void is defined as the tracto that is less than min_vox*nbr_samples.
-	self.zero_tracto = [] #  void tractogram ( sum < min_vox*n_samples)
-	self.nonzero_tracto = []	 # will contain the non void tractogram
-	self.tractograms = []
-	for i in xrange(len(V[:, 0])): # loop over the coordinates
-	   x, y, z = V[i, :] # read the ith coordinate (x,y,z)
-	   filename = self.tract_path + '/' + self.tract_name + str(int(x)) +\
-	   '_' + str(int(y)) + '_' + str(int(z)) + '.nii.gz'
-	   A = nl.load(filename).get_data() # read the tractogram (.nii.gz)
-	   T1 = A.reshape(-1) # from 3D to vector form
-	   self.nbr_sample = np.max(T1.reshape(-1))
-	   # if all voxel = 0, nbr_sample = 0
-	   Sm = np.sum(T1)
-	   if (Sm <= self.nbr_sample*min_vox):
-	   # detect void tractogram. It defined as the tractogram that has a sum
-                self.zero_tracto.extend([i]) # less then 5* number of samples
-           else:
-		self.nonzero_tracto.extend([i])
-		# add the ith seed to the non viod tractogram
-	   # read only the voxels inside the brain mask
-           T1 = T1[np.array(self.non_zeroMask)].astype('float32')
-	   self.tractograms.append(T1) # add the ith tractogram
-
-	return self.tractograms # return the tractograms
+#    def Read_tractograms(self, V, min_vox = 5):
+#	#read all the tractograms used in the cluster
+#	# zero void is defined as the tracto that is less than min_vox*nbr_samples.
+#	self.zero_tracto = [] #  void tractogram ( sum < min_vox*n_samples)
+#	self.nonzero_tracto = []	 # will contain the non void tractogram
+#	self.tractograms = []
+#	for i in xrange(len(V[:, 0])): # loop over the coordinates
+#	   x, y, z = V[i, :] # read the ith coordinate (x,y,z)
+#	   filename = self.tract_path + '/' + self.tract_name + str(int(x)) +\
+#	   '_' + str(int(y)) + '_' + str(int(z)) + '.nii.gz'
+#	   A = nl.load(filename).get_data() # read the tractogram (.nii.gz)
+#	   T1 = A.reshape(-1) # from 3D to vector form
+#	   self.nbr_sample = np.max(T1.reshape(-1))
+#	   # if all voxel = 0, nbr_sample = 0
+#	   Sm = np.sum(T1)
+#	   if (Sm <= self.nbr_sample*min_vox):
+#	   # detect void tractogram. It defined as the tractogram that has a sum
+#                self.zero_tracto.extend([i]) # less then 5* number of samples
+#           else:
+#		self.nonzero_tracto.extend([i])
+#		# add the ith seed to the non viod tractogram
+#	   # read only the voxels inside the brain mask
+#           T1 = T1[np.array(self.non_zeroMask)].astype('float32')
+#	   self.tractograms.append(T1) # add the ith tractogram
+#
+#	return self.tractograms # return the tractograms
 
     def Detect_void_tracto(self, min_vox = 5):	 # detecte the void tractograms
 	# zero void is defined as the tracto that is less than min_vox*nbr_samples.

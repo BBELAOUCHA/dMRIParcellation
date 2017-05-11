@@ -1,29 +1,26 @@
 # -*- coding: utf-8 -*-
 '''
-################################################################################
+###################################################################################
 #
 # This code is used to parcellate the cortical surface from dMRI information
 # (tractograms in nii.gz files) using the Mutual Nearest Neighbor Condition
 #
-################################################################################
+###################################################################################
 # BELAOUCHA Brahim
-# Copyright (C) 2015 Belaoucha Brahim
 # Version 1.0
 # Inria Sophia Antipolis
 # University of Nice Sophia Antipolis
 # brahim.belaoucha@inria.fr
 # belaoucha.brahim@etu.unice.fr
-# If you use this code, you have to cite:
+# If you use this code, please acknowledge Brahim Belaoucha.
+# The best single reference is:
 # Brahim Belaoucha, Maurren Clerc and Théodore Papadopoulo, “Cortical Surface
 # Parcellation via dMRI Using Mutual Nearset Neighbor Condition”, International
 # Symposium on Biomedical Imaging: From Nano to Macro, Prague, Czech Republic.
-#                                                       pp. 903-906, April 2016.
-# Brahim Belaoucha and Théodore Papadopoulo, “MEG/EEG reconstruction in the
-#       reduced source space”, in International Conference on Basic and Clinical
-#          Multimodal Imaging (BaCi 2015), Utrecht, Netherlands, September 2015.
+# pp. 903-906, April 2016.
 # Author: Brahim Belaoucha 2015
-#         Théodore Papadopoulo 2015
-################################################################################
+# Any questions, please contact brahim.belaoucha@gmail.com
+###################################################################################
 '''
 import Region_preparation as RP
 import Prepare_tractogram as PT
@@ -34,9 +31,7 @@ from copy import deepcopy
 import os
 from scipy.stats import variation as cv
 import time
-import scipy.io as sp
-from scipy import sparse, io
-from util import cond2mat_index, mat2cond_index
+from util import mat2cond_index
 
 class Parcellation():  # main class to parcellate the cortical surface
     def __init__(self, path_tractogram, Prefix_name, save_path, nodif_mask,
@@ -250,7 +245,8 @@ class Parcellation():  # main class to parcellate the cortical surface
                                     c = list(a)
                                     # merge region  region_labels[i] and u
                                     c.extend(list(b))
-                                    RegionsX[np.array(c)] = region_labels[i]
+                                    c = np.array(c)
+                                    RegionsX[c] = region_labels[i]
                                     cv_array = self.Read_from_SM(self.Parc, c)
                                     if (len(c) >= self.region_th or \
                                         cv(cv_array) > cvth):
@@ -264,12 +260,11 @@ class Parcellation():  # main class to parcellate the cortical surface
                                     break # go to the next region
 
                     Regions = np.array(RegionsX)
-                    SM_vector=self.Statistics_SM(self.Parc,Regions)
+                    SM_vector=self.Statistics_SM(self.Parc, Regions)
                     # get the similarity values of all pairs inside each region
                     #Stopping criterion if no more merging is found
                     region_labels = np.unique(Regions)
-                    if (len(region_labels) == NBR_REGIONS)  or \
-                       (int(self.mesh.connectivity.sum()) == 0):
+                    if (len(region_labels) == NBR_REGIONS):
                         #or (len(region_labels) <= R)  # condition to stop the code.
                         #if the same nbr of region before and after stop iterating
                         Label_all, NBR_REGIONS = self.Add_void(self.Parc, Reg, Regions,
@@ -285,11 +280,11 @@ class Parcellation():  # main class to parcellate the cortical surface
                     nbr_r.append(NBR_REGIONS)  # append the nbr of regions
                     t.append((time.time()-exe_Time)/60)
                     # add execution time to the current parcellation
-                    mean_v.append(np.mean(SM_vector))  # add the mean of the SM values
-                    std_v.append(np.std(SM_vector))   # add the std of the SM values
+                    mean_v.append(np.mean(SM_vector, dtype=np.float64))  # add the mean of the SM values
+                    std_v.append(np.std(SM_vector, dtype=np.float64))   # add the std of the SM values
                     Labels.append(Label_all)
                     nbr="%03d" % (nbr_iteration-nbr_remaining)
-                    printData['Iter, # Reg, time(m), mean, std'] = nbr ,NBR_REGIONS,\
+                    printData['Iter, # Reg, time(m), mean, std'] = nbr, NBR_REGIONS,\
                     format(t[-1], '.3f'), format(mean_v[-1], '.3f'), \
                     format(std_v[-1], '.3f')
                     self.PrintResults(printData)
@@ -323,8 +318,8 @@ class Parcellation():  # main class to parcellate the cortical surface
                 nbr_r.append(len(np.unique(Regions)))  # append the nbr of regions
                 t.append((time.time()-exe_Time)/60)
                 # add execution time to the current parcellation
-                mean_v.append(np.mean(Reg_sm))  # add the mean of the SM values
-                std_v.append(np.std(Reg_sm))   # add the std of the SM values
+                mean_v.append(np.mean(Reg_sm, dtype=np.float64))  # add the mean of the SM values
+                std_v.append(np.std(Reg_sm, dtype=np.float64))   # add the std of the SM values
                 region_labels = np.unique(Regions)
                 Regions, NBR_REGIONS = self.Add_void(self.Parc, Reg, Regions,
                                        Excluded_seeds, self.Label_non_excluded)
@@ -375,6 +370,7 @@ class Parcellation():  # main class to parcellate the cortical surface
             for i in xrange(nbr_small_rg): # change the labeling  after the merging
                 indx = np.where(RegionsX == Reg_small[i])[0]
                 RegionsX2[np.array(indx)] = X[i]
+
             RegionsX = RegionsX2
             Un = np.unique(RegionsX)# new unique labels
             nbr_r = len(Un) # new number of regions
@@ -384,6 +380,7 @@ class Parcellation():  # main class to parcellate the cortical surface
                 ind = np.where(RegionsX == Un[i])[0]
                 SizeRegion[i] = len(ind)
                 RegionX_[np.array(ind)] = i
+
             RegionsX = RegionX_
             Reg_small = np.where(SizeRegion <= self.region_th)[0]
             # get the regions with small size
@@ -392,6 +389,7 @@ class Parcellation():  # main class to parcellate the cortical surface
                 # break the loop if the pre and actual number of small regions are equal
           	break # stop merging small regions
             nbr_small_rg = len(Reg_small)
+
         return RegionsX  # label of seeds after merging small regions with big ones.
 
     def Merge_till_R(self,Parc,SimilarityMeasures,Reg,SizeRegion, Regions, mesh,
@@ -430,38 +428,24 @@ class Parcellation():  # main class to parcellate the cortical surface
     def Statistics_SM(self, Parc, Regions):
         # function used to extract the the similarity measure values between all the pairs
         # in each region as a vector
-        Un=np.unique(Regions)
-        Reg_SM=[]
+        Un = np.unique(Regions)
+        Reg_SM = []
         #np.fill_diagonal(Parc.Similarity_Matrix, 0.0)
         for i in Un:
-            ind=np.array(np.where(Regions == i)[0])
+            ind = np.array(np.where(Regions == i)[0])
             cv_array = self.Read_from_SM(Parc, ind)
-            cv_array = np.array(cv_array)
-            Reg_SM.extend(cv_array)
-        return Reg_SM # return the similarity measures values of all pairs inside each region
-
-    def SimMea_all_seed(self, Parc, Mesh_bg):
-        # create bigger SM matrix of zero and non zero seeds
-        nbr_seeds = np.shape(Mesh_bg.connectivity)[0]
-        Similarity_measure = np.eye(nbr_seeds)
-        for i in xrange(len(Parc.nonzero_tracto)):
-            index = Parc.nonzero_tracto[i]
-            Similarity_measure[index, np.array(Parc.nonzero_tracto)] = Parc.Similarity_Matrix[i, :]
-            Similarity_measure[np.array(Parc.nonzero_tracto), index] = Parc.Similarity_Matrix[:, i]
-
-        for i in xrange(len(Parc.zero_tracto)):
-            index = Parc.replacement[Parc.zero_tracto[i]]
-            in_list = np.where(np.array(Parc.nonzero_tracto) ==index)[0]
-            Similarity_measure[index, np.array(Parc.nonzero_tracto)] = Parc.Similarity_Matrix[in_list, :]
-            Similarity_measure[np.array(Parc.nonzero_tracto), index] = Parc.Similarity_Matrix[:, in_list]
-        return Similarity_measure
+            if len(cv_array):
+            	Reg_SM.extend(cv_array)
+        # return the similarity measures values of all pairs inside each
+        return np.array(Reg_SM)
 
     def Read_from_SM(self, Parc, ind):
+        # this function is used to read sm values from the SM vector (n(n-1)/2)
         cv_array = []
         for iix in ind:
             for jjx in ind:
-                if iix!=jjx:
-                    ix = mat2cond_index(Parc.nbr_seeds , iix, jjx)
+                if iix != jjx:
+                    ix = mat2cond_index(Parc.nbr_seeds, iix, jjx)
                     cv_array.append(Parc.Similarity_Matrix[ix])
 
-        return cv_array
+        return np.array(cv_array)

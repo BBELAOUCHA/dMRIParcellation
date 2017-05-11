@@ -4,8 +4,6 @@ import numpy as np
 # WritePython2Vtk: write .vtk files in python
 # ReadVtk2Python: Read .vtk file in python "it was created by WritePython2Vtk"
 #Created by Brahim Belaoucha on 2014/02/01
-#Copyright (c) Brahim Belaoucha. All right reserved
-
 
 def WritePython2Vtk(filename, vertices, faces, normal, scalar,
                     name_of_scalar="Parcels"):

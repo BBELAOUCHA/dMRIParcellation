@@ -1,28 +1,25 @@
 #!/usr/bin/env python
 '''
-############################################################################################
-############################################################################################
+###################################################################################
+###################################################################################
 # BELAOUCHA Brahim
-# Copyright (C) 2015 Belaoucha Brahim
 # Version 1.0
 # Inria Sophia Antipolis
 # University of Nice Sophia Antipolis
 # brahim.belaoucha@inria.fr
 # belaoucha.brahim@etu.unice.fr
-# If you use this code, you have to cite:
-# Brahim Belaoucha, Maurren Clerc and Th\'eodore Papadopoulo, "Cortical Surface Parcellation
-# via dMRI Using Mutual Nearset Neighbor Condition", International Symposium on Biomedical
-# Imaging: From Nano to Macro, Prague, Czech Republic. pp. 903-906, Apr.2016.
-# Brahim Belaoucha and Th\'eodore Papadopoulo, "MEG/EEG reconstruction in the reduced source 
-# space", in International Conference on Basic and Clinical Multimodal Imaging (BaCi 2015), 
-# Utrecht, Netherlands, September 2015.
+# If you use this code, please acknowledge Brahim Belaoucha.
+# The best single reference is:
+# Brahim Belaoucha, Maurren Clerc and Th\'eodore Papadopoulo, "Cortical Surface
+# Parcellation via dMRI Using Mutual Nearset Neighbor Condition", International
+# Symposium on Biomedical Imaging: From Nano to Macro, Prague, Czech Republic. pp.
+# 903-906, Apr.2016.
 # Author: Brahim Belaoucha 2015
 #         Th\'eodore Papadopoulo 2015
-############################################################################################
-############################################################################################
+# Any questions, please contact brahim.belaoucha@gmail.com
+###################################################################################
+###################################################################################
 '''
-import sys
-#sys.path.append("./inc/")
 import h5py
 import scipy
 import numpy as np
@@ -39,8 +36,8 @@ def check_input(Arg):
     return test
 # How to run:
 # MNNparcellation -i input -o output -t tractogram -tb tractoprefix -seed coordinates
-# -Ex excluded -sm Similarity measures -n number of regions -cvth coeficient of varianc
-# e -nodif mask
+# -Ex excluded -sm Similarity measures -n number of regions -cvth coeficient of
+# variance -nodif mask
 
 
 if __name__ == "__main__":
@@ -48,74 +45,83 @@ if __name__ == "__main__":
         parser._action_groups.pop()
         required = parser.add_argument_group('required arguments')
         optional = parser.add_argument_group('optional arguments')
-        required.add_argument('-i', action="store", dest='input', type=str, 
+        required.add_argument('-i', action="store", dest='input', type=str,
         help='path to input file .mat that contain cortical mesh details')
-        # input file "mat" file containing Faces, Normal, Vertices, VertConn (mesh connectivity)
-	required.add_argument('-o', action="store", dest='save', type=str,
+        # input file "mat" file containing Faces, Normal, Vertices, VertConn
+        required.add_argument('-o', action="store", dest='save', type=str,
         help='path to output folder') # folder where to save the results
 	required.add_argument('-t', action="store", dest='tractograms', type=str,
-        help='path to tractograms') # folder that contains the tractograms format ".nii.gz"
+        help='path to tractograms')
+        # folder that contains the tractograms format ".nii.gz"
 	required.add_argument('-tb', action="store", dest='tract_name', type=str,
-        help='prefix of tractogram') # prefix of the tractogram name (tract_name_x_y_z.nii.gz)
+        help='prefix of tractogram')
+        # prefix of the tractogram name (tract_name_x_y_z.nii.gz)
 	required.add_argument('-seed', action="store", dest='coordinates', type=str,
-        help='path to coordinates') # path of coordinates of seeds in the diffusion space
-	required.add_argument('-sm',  dest='SM', 
-        help='Similarity measure: Cosine, Tanimoto, Ruzicka, Motyka') # list of similarity measures
-	required.add_argument('-n',  dest='NR', 
-        help='number T used to stop merging big regions') # linteger used to stop merging regions
+        help='path to coordinates')
+        # path of coordinates of seeds in the diffusion space
+	required.add_argument('-sm',  dest='SM',
+        help='Similarity measure: Cosine, Tanimoto, Ruzicka, Motyka')
+        # list of similarity measures
+	required.add_argument('-n',  dest='NR',
+        help='number T used to stop merging big regions')
+        # linteger used to stop merging regions
 	optional.add_argument('-cvth', action="store", dest='cv', type=float,
-        help='threshold used to stop merging big regions coefficient of variance') 
+        help='threshold used to stop merging big regions coefficient of variance')
         # variation coefficient is used to stop merging regions with low homogeneity
 	optional.add_argument('-nodif', action="store", dest='nodif',
-        help='path to white matter mask used to reduce memory') # path to the brain/white matter mask
+        help='path to white matter mask used to reduce memory')
+        # path to the brain/white matter mask
 	optional.add_argument('-v', action="store", dest='verbose', type=int,
-        help='Enable (1) showing results in terminal') # parameter used to enable results display
+        help='Enable (1) showing results in terminal')
+        # parameter used to enable results display
 	optional.add_argument('-m', action="store", dest='merge', type=int,
-        help='Merge option: 0 (default)') # parameter used to merge small regions
+        help='Merge option: 0 (default)')
+        # parameter used to merge small regions
 	optional.add_argument('-Ex', action="store", dest='excluded',
-        help='path to excluded coordinates') # file that contain seeds to be excluded 
+        help='path to excluded coordinates') # file that contain seeds to be excluded
 
         Arg = parser.parse_args() # read different parameters
         if check_input(Arg):
 		print "Missing arguments check MNNparcellation --help"
 	else:
-		coordinate = np.loadtxt(str(Arg.coordinates), unpack=True, delimiter='\t',
-                                        dtype=int).T 
+		coordinate = np.loadtxt(str(Arg.coordinates), unpack=True,
+		                        delimiter='\t', dtype=int).T
 		x, y = np.shape(coordinate)
 		if y > x:
 		    coordinate = coordinate.T
 		# read the diffusion space coordinate of the seeds
-		Cortex = h5py.File(str(Arg.input), 'r') 
+		Cortex = h5py.File(str(Arg.input), 'r')
 		# load the details of the mesh, coordinate, faces, normal, mesh connecticity.
-		vertices_plot = np.array(Cortex['Vertices']) 
+		vertices_plot = np.array(Cortex['Vertices'])
 		# get the coordinate in the anatomy image
 		normal_plot, faces_plot, Excluded_seeds = [], [], []
-
 		if "VertNormals" in Cortex.keys():
-		    normal_plot = np.array(Cortex['VertNormals']) # get the normals in the anatomical space
-	
+		    normal_plot = np.array(Cortex['VertNormals'])
+                    # get the normals in the anatomical space
+
 		if "Faces" in Cortex.keys():
-		    faces_plot = np.array(Cortex["Faces"], dtype=int)  
+		    faces_plot = np.array(Cortex["Faces"], dtype=int)
 		    # get faces of the mesh in the anatomical space.
 		    if faces_plot.min() > 0:
 			faces_plot = faces_plot - 1
-		Connectivity=np.eye(np.max(np.shape(coordinate)), dtype=int)
+		#Connectivity=np.eye(np.max(np.shape(coordinate)), dtype=int)
 		if "VertConn" in Cortex.keys():
 		    C = Cortex['VertConn'] # get the tess connectivity matrix
 		    D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))#
 		    Connectivity = np.array(D_conenct.todense(), np.int8)
 		    del D_conenct, C, Cortex # delete unused data for memory reason
-
 		if Arg.excluded:
-		    Excluded_seeds = np.loadtxt(Arg.excluded, dtype=int) # get the list of the excluded seeds
-		################ Parcellation starts here #########################################
+		    Excluded_seeds = np.loadtxt(Arg.excluded, dtype=int)
+                    # get the list of the excluded seeds
+		################ Parcellation starts here #########################
 		Verbose = False # by default dont display any results
 		if Arg.verbose:
 			Verbose	= True # display results
 
 		cvth=np.Inf #default not included in the stopping criteria
 		if Arg.cv:
-			cvth = Arg.cv # default threshold used to stop merging regions with low homogeneity
+			cvth = Arg.cv
+                        #threshold used to stop merging regions with low homogeneity
 
 		Regions	= [len(coordinate[:,0])-len(Excluded_seeds)] # default number of regions
 		if Arg.NR:
@@ -123,19 +129,19 @@ if __name__ == "__main__":
 
 		SM = ['Cosine'] # Default similarity measure, cosine similarity
 		if Arg.SM:
-			SM = [item for item in Arg.SM.split(',')] 
+			SM = [item for item in Arg.SM.split(',')]
 		# list conatining the wanted similarity measures
 		merge = 2
 		if Arg.merge is not None:
 			merge = Arg.merge
 
 		Parcel = CSP(Arg.tractograms, Arg.tract_name, Arg.save, Arg.nodif,
-                             Verbose, merge) 
+                             Verbose, merge)
 		# initialize the parcellation by specifying the different paths
-		Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot) 
+		Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot)
 		# define the mesh to be used to generate the vtk file
 		del vertices_plot, faces_plot, normal_plot
 		Parcel.PrepareData(coordinate, Connectivity, Excluded_seeds)
-		Parcel.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, 
+		Parcel.Parcellation_agg(coordinate, Connectivity, Excluded_seeds,
  					Regions, SM, Mesh_plot, cvth)
 		# run the parcellation algorithm
