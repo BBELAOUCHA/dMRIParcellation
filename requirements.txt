@@ -2,3 +2,4 @@ nibabel
 h5py
 numpy
 scipy
+termcolor
