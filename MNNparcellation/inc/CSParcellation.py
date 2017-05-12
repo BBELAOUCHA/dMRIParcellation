@@ -117,7 +117,7 @@ class Parcellation():
 	    Coord_non_excluded = coordinate[np.array(self.Label_non_excluded), :]
 	    Connectivity = Connectivity[np.array(self.Label_non_excluded), :]
 	    Connectivity = Connectivity[:, np.array(self.Label_non_excluded)]
-        coordinate = Coord_non_excluded
+            coordinate = Coord_non_excluded
 
         self.nbr = len(coordinate[:, 0])  # number of vertices
         self.Connectivity_X = deepcopy(Connectivity)  # this mesh connectivity will not
