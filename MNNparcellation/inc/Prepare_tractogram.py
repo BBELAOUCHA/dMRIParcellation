@@ -56,8 +56,8 @@ class Parcellation_data():
             MASK = nl.load(self.nodif_mask).get_data()
 	    M = np.array(MASK.reshape(-1))
 	    self.non_zeroMask = np.array(np.nonzero(M)[0])
-	   # get the voxels of only the mask.
-        del MASK, M
+	    # get the voxels of only the mask.
+            del MASK, M
 
     def Read_tracto(self, V):  # function used to read  tractogram in 3D
 	# read the nii.gz tractogram files one by one
