@@ -1,0 +1,3 @@
+/home/bbelaouc/Data/Softwares/fsl/bin/probtrackx2 --simple --seedref=/home/bbelaouc/Data/WorkShop/Pre-processing/eddy_correction/S1/bedpostx.bedpostX/nodif_brain_mask -o tract -x /home/bbelaouc/Data/WorkShop/Pre-processing/eddy_correction/S1/tract/fdt_coordinates.txt -l --onewaycondition -c 0.2 -S 2000 --steplength=0.5 -P 6000 --fibthresh=0.01 --distthresh=0.0 --sampvox=0.0 --forcedir --opd -s /home/bbelaouc/Data/WorkShop/Pre-processing/eddy_correction/S1/bedpostx.bedpostX/merged -m /home/bbelaouc/Data/WorkShop/Pre-processing/eddy_correction/S1/bedpostx.bedpostX/nodif_brain_mask --dir=/home/bbelaouc/Data/WorkShop/Pre-processing/eddy_correction/S1/tract 
+---------------------------------------------
+
