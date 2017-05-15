@@ -66,7 +66,7 @@ def Add_zero_tracto_label(check_tracto, Regions):
     return  All_seeds_label
         # add the label of all seeds including the void tractogram
 
-def Excluded_label(self, excluded, Labelnonexcluded, label_orig):
+def Excluded_label(excluded, Labelnonexcluded, label_orig):
     # function used to add the label of the # excluded seeds
     #(0 label) to the label of the non void seeds
     #label of excluded seeds, label of non excluded seeds, seeds non excluded
