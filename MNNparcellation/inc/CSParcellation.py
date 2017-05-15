@@ -100,6 +100,20 @@ def Read_from_SM(Parc, ind):
 
     return np.array(cv_array)
 
+def Statistics_SM(Parc, Regions):
+    # function used to extract the the similarity measure values between all the pairs
+    # in each region as a vector
+    Un = np.unique(Regions)
+    Reg_SM = []
+    #np.fill_diagonal(Parc.Similarity_Matrix, 0.0)
+    for i in Un:
+        ind = np.array(np.where(Regions == i)[0])
+        cv_array = Read_from_SM(Parc, ind)
+        if len(cv_array):
+            Reg_SM.extend(cv_array)
+        # return the similarity measures values of all pairs inside each
+    return np.array(Reg_SM)
+
 class Parcellation():
     # main class to parcellate the cortical surface
     def __init__(self, path_tractogram, Prefix_name, save_path, nodif_mask,
@@ -307,7 +321,7 @@ class Parcellation():
                                     break  # go to the next region
 
                     Regions = np.array(RegionsX)
-                    SM_vector = self.Statistics_SM(self.Parc, Regions)
+                    SM_vector = Statistics_SM(self.Parc, Regions)
                     # get the similarity values of all pairs inside each region
                     #Stopping criterion if no more merging is found
                     region_labels = np.unique(Regions)
@@ -360,7 +374,7 @@ class Parcellation():
                 else:
                     pass
 
-                Reg_sm = self.Statistics_SM(self.Parc, Regions)
+                Reg_sm = Statistics_SM(self.Parc, Regions)
                 # extract the SM as a vector of the last label
                 nbr_r.append(len(np.unique(Regions)))  # append the nbr of regions
                 t.append((time.time()-exe_Time)/60)
@@ -438,18 +452,4 @@ class Parcellation():
             nbr_small_rg = len(Reg_small)
 
         return RegionsX  # label of seeds after merging small regions with big ones.
-
-    def Statistics_SM(self, Parc, Regions):
-        # function used to extract the the similarity measure values between all the pairs
-        # in each region as a vector
-        Un = np.unique(Regions)
-        Reg_SM = []
-        #np.fill_diagonal(Parc.Similarity_Matrix, 0.0)
-        for i in Un:
-            ind = np.array(np.where(Regions == i)[0])
-            cv_array = Read_from_SM(Parc, ind)
-            if len(cv_array):
-            	Reg_SM.extend(cv_array)
-        # return the similarity measures values of all pairs inside each
-        return np.array(Reg_SM)
 
