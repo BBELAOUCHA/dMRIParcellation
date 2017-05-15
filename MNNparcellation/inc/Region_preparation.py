@@ -81,7 +81,6 @@ def Excluded_label(excluded, Labelnonexcluded, label_orig):
 class Mesh():  # class definition of mesh:-coordinates and tess connectivity
 
     def __init__(self, vertices, faces=None, normal=None, connectivity=None):
-        
         if faces == None: faces = []
         if normal == None: normal = []
         if connectivity == None: connectivity = []
