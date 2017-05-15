@@ -82,9 +82,9 @@ class Mesh():  # class definition of mesh:-coordinates and tess connectivity
 
     def __init__(self, vertices, faces=None, normal=None, connectivity=None):
         
-        faces = [] if faces == None
-        normal = [] if normal == None
-        connectivity = [] if connectivity == None
+        if faces == None: faces = []
+        if normal == None: normal = []
+        if connectivity == None: connectivity = []
         self.vertices = vertices  # coordinates in the diffusion space
         self.connectivity = connectivity  # mesh tess connectivity matrix
         self.faces = faces  # faces of the mesh
