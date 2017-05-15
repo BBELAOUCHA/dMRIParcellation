@@ -4,7 +4,6 @@ sys.path.append('../inc/')
 from MNNparcellation import Python2Vtk as PY
 import tempfile as TP
 import numpy as np
-import numpy.testing as npt
 
 def co_shape(A, B):
 	if np.shape(A) == np.shape(B):

@@ -1,9 +1,5 @@
 # thic code is used to test prepare tracto
-from MNNparcellation import Python2Vtk as PY
-import tempfile as TP
 import numpy as np
-import numpy.testing as npt
-from MNNparcellation import Similarity_Measures as SM
 from MNNparcellation import Prepare_tractogram as PT
 from MNNparcellation import Region_preparation as RP
 from MNNparcellation.inc.CSParcellation import Parcellation as CSP
@@ -20,7 +16,6 @@ def test_readnibabel():
     " Test read nibabel "
     cwd = os.getcwd()
     cwd += '/data/'
-    coordinates = cwd + '/tract/fdt_coordinates.txt'
     tractograms = cwd + '/tract/'
     tract_name = 'tract_'
     nodif = cwd + '/nodif_brain_mask.nii.gz'

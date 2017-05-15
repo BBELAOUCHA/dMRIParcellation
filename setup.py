@@ -1,9 +1,5 @@
 ''' Setup file '''
-from os import path
-from distutils import extension
-
 from setuptools import setup
-import numpy
 package_name = 'MNNparcellation'
 
 inc_module = package_name + '.inc'

@@ -3,9 +3,6 @@ from MNNparcellation import Python2Vtk as PY
 import tempfile as TP
 import numpy as np
 import numpy.testing as npt
-from MNNparcellation import Similarity_Measures as SM
-from MNNparcellation import Prepare_tractogram as PT
-from MNNparcellation import Region_preparation as RP
 from MNNparcellation import CSParcellation as CSP
 from MNNparcellation import util
 from termcolor import colored
@@ -85,7 +82,7 @@ def test_similarity():
 	Test = {}
 	for Q in SM_method:
 	    sim.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, [n_reg], [Q], sim.mesh, np.inf)
-	    SM = util.vec2symmetric_mat(sim.Parc.Similarity_Matrix, nbr_seeds)
+	    #SM = util.vec2symmetric_mat(sim.Parc.Similarity_Matrix, nbr_seeds)
             if np.linalg.norm(sim.Labels - Label) != 0:
                 Test[Q] = False
         return Test
