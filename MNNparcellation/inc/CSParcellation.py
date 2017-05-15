@@ -33,6 +33,72 @@ from scipy.stats import variation as cv
 import time
 from util import mat2cond_index
 
+def Add_void(Parc, Reg, Regions, Excluded_seeds, Label_non_excluded):
+    # function used to add the labels to the viod tractograms
+    # Object of the parcellation, Object to region processing class, labels,
+    # excluded seeds, non excluded seeds
+    region_labels = np.unique(Regions)
+    NBR_REGIONS = len(region_labels)
+    SizeRegion = np.zeros(NBR_REGIONS)
+    for ii in xrange(NBR_REGIONS):
+        insideregion = np.where(np.array(Regions) == region_labels[ii])[0]
+        SizeRegion[ii] = len(insideregion)
+        Regions[np.array(insideregion)] = ii
+
+    if len(Parc.zero_tracto) > 0:
+        RX = RP.Add_zero_tracto_label(Parc, Regions)  # add void tractograms
+        RX = RX+1	 # label {1,..,NBR_REGIONS}
+    else:
+        RX = Regions
+
+    if len(Excluded_seeds) > 0:
+        RX = RP.Excluded_label(Excluded_seeds, RX, Label_non_excluded)
+    return RX, NBR_REGIONS
+
+
+def Merge_till_R(Parc, SimilarityMeasures, Reg, SizeRegion, Regions, mesh,
+                     R_coef):  # function used to merge the small regions
+    # so that in total you will have regions with the highest structural connecitvity
+    # and total number of regions == R_coef
+    Un = np.unique(Regions)  # the uniqe labels
+    RegionsX = np.array(Regions)
+    while len(Un) > R_coef:  # loop to merge small regions with bigger ones
+        Reg_small = SizeRegion.argmin()
+        sth, X = 0, Reg_small
+        insideregion, connected_regions = RP.Neighbor_region(RegionsX,
+                                             Reg_small, mesh)
+        # get the neighbors and seeds of region Z[i]
+        for j in xrange(len(connected_regions)):  # loop over all regions
+            if connected_regions[j] != 0:
+                outeregion = np.where(RegionsX == connected_regions[j])[0]
+                S_mean = SimilarityMeasures(Parc, insideregion, outeregion)
+                if (S_mean > sth):
+              # if  connected_regions[j] and Z[i] have high similarity measure
+                    sth = S_mean  # merge Z[i] to connected_regions[j]
+                    X = connected_regions[j]  # merge Z[i] to connected_regions[j]
+        RegionsX2 = np.array(RegionsX)
+        RegionsX2[np.array(insideregion)] = X
+        Un = np.unique(RegionsX2)  # new unique labels
+        nbr_r = len(Un)  # new number of regions
+        SizeRegion = np.zeros(nbr_r)
+        RegionX_ = np.zeros(len(RegionsX2))
+        for i in xrange(nbr_r):  # get the size of the new regions
+            ind = np.where(RegionsX2 == Un[i])[0]
+            SizeRegion[i] = len(ind)
+            RegionX_[np.array(ind)] = i
+        RegionsX = RegionX_
+    return RegionsX  # label of seeds after merging small regions with big ones.
+
+def Read_from_SM(Parc, ind):
+    # this function is used to read sm values from the SM vector (n(n-1)/2)
+    cv_array = []
+    for iix in ind:
+        for jjx in ind:
+            if iix != jjx:
+                ix = mat2cond_index(Parc.nbr_seeds, iix, jjx)
+                cv_array.append(Parc.Similarity_Matrix[ix])
+
+    return np.array(cv_array)
 
 class Parcellation():
     # main class to parcellate the cortical surface
@@ -53,28 +119,6 @@ class Parcellation():
         if self.verbose:  # The result is saved in a dictionary
             for i in Data.keys():
                 print i, ' = ', Data[i]  # print the dictionary
-
-    def Add_void(self, Parc, Reg, Regions, Excluded_seeds, Label_non_excluded):
-        # function used to add the labels to the viod tractograms
-	# Object of the parcellation, Object to region processing class, labels,
-        # excluded seeds, non excluded seeds
-        region_labels = np.unique(Regions)
-        NBR_REGIONS = len(region_labels)
-        SizeRegion = np.zeros(NBR_REGIONS)
-        for ii in xrange(NBR_REGIONS):
-            insideregion = np.where(np.array(Regions) == region_labels[ii])[0]
-            SizeRegion[ii] = len(insideregion)
-            Regions[np.array(insideregion)] = ii
-
-        if len(Parc.zero_tracto) > 0:
-            RX = Reg.Add_zero_tracto_label(Parc, Regions)  # add void tractograms
-            RX = RX+1	 # label {1,..,NBR_REGIONS}
-        else:
-            RX = Regions
-
-        if len(Excluded_seeds) > 0:
-            RX = Reg.Excluded_label(Excluded_seeds, RX, Label_non_excluded)
-        return RX, NBR_REGIONS
 
     def Write2file_results(self, Similarity_Measure, nbr_r, t, mean_v, std_v, R):
         # writesome results of the regions
@@ -207,7 +251,7 @@ class Parcellation():
                     for i in xrange(NBR_REGIONS):  # loop over the regions
                         #Find neigboring regions of region i (connected_regions)
                         #and the indices of the ROI (insideregion)
-                        insideregion, connected_regions = Reg.Neighbor_region(
+                        insideregion, connected_regions = RP.Neighbor_region(
                                                           Regions, i, self.mesh)
                         nbr_connected = len(connected_regions)
                         # Calculate the row S of correlations of region i with
@@ -250,7 +294,7 @@ class Parcellation():
                                     c.extend(list(b))
                                     c = np.array(c)
                                     RegionsX[c] = region_labels[i]
-                                    cv_array = self.Read_from_SM(self.Parc, c)
+                                    cv_array = Read_from_SM(self.Parc, c)
                                     if (len(c) >= self.region_th or \
                                         cv(cv_array) > cvth):
                                         z_shape = np.shape(self.mesh.connectivity[c, :])
@@ -270,13 +314,13 @@ class Parcellation():
                     if (len(region_labels) == NBR_REGIONS):
                         #or (len(region_labels) <= R)  # condition to stop the code.
                         #if the same nbr of region before and after stop iterating
-                        Label_all, NBR_REGIONS = self.Add_void(self.Parc, Reg, Regions,
+                        Label_all, NBR_REGIONS = Add_void(self.Parc, Reg, Regions,
                                                  Excluded_seeds, self.Label_non_excluded)
                         # add the labels of the excluded and void seeds
                         Labels.append(Label_all)  # save the labels at each iteration
                         break  # exit the while loop
 
-                    Label_all, NBR_REGIONS = self.Add_void(self.Parc, Reg, Regions,
+                    Label_all, NBR_REGIONS = Add_void(self.Parc, Reg, Regions,
                                              Excluded_seeds, self.Label_non_excluded)
                     # add the labels of the excluded and void seeds
                     nbr_remaining -= 1  # decrease iteration
@@ -306,7 +350,7 @@ class Parcellation():
                     Regions[np.array(index)] = i
 
                 if self.merge == 1:
-                    Regions = self.Merge_till_R(self.Parc, SimilarityMeasure, Reg, SizeRegion,
+                    Regions = Merge_till_R(self.Parc, SimilarityMeasure, Reg, SizeRegion,
                               Regions, self.mesh, R)
                     # merge small regions with the nearest region (highest SM) to have R nbrR
                 elif self.merge == 0:
@@ -324,7 +368,7 @@ class Parcellation():
                 mean_v.append(np.mean(Reg_sm, dtype=np.float64))  # add the mean of the SM values
                 std_v.append(np.std(Reg_sm, dtype=np.float64))   # add the std of the SM values
                 region_labels = np.unique(Regions)
-                Regions, NBR_REGIONS = self.Add_void(self.Parc, Reg, Regions,
+                Regions, NBR_REGIONS = Add_void(self.Parc, Reg, Regions,
                                        Excluded_seeds, self.Label_non_excluded)
                 # add the label to void seeds
                 Labels.append(Regions)  # save the labels at each iteration
@@ -358,7 +402,7 @@ class Parcellation():
         while nbr_small_rg > 0:  # loop to merge small regions with bigger ones
             for i in xrange(len(Reg_small)):  # loop over the number of small regions
                 sth = 0
-                insideregion, connected_regions = Reg.Neighbor_region(RegionsX,
+                insideregion, connected_regions = RP.Neighbor_region(RegionsX,
                                                   Reg_small[i], mesh)
                 # get the neighbors and seeds of region Z[i]
                 for j in xrange(len(connected_regions)):  # loop over all regions
@@ -395,39 +439,6 @@ class Parcellation():
 
         return RegionsX  # label of seeds after merging small regions with big ones.
 
-    def Merge_till_R(self, Parc, SimilarityMeasures, Reg, SizeRegion, Regions, mesh,
-                     R_coef):  # function used to merge the small regions
-        # so that in total you will have regions with the highest structural connecitvity
-        # and total number of regions == R_coef
-        Un = np.unique(Regions)  # the uniqe labels
-        RegionsX = np.array(Regions)
-        while len(Un) > R_coef:  # loop to merge small regions with bigger ones
-            Reg_small = SizeRegion.argmin()
-            sth, X = 0, Reg_small
-            insideregion, connected_regions = Reg.Neighbor_region(RegionsX,
-                                              Reg_small, mesh)
-            # get the neighbors and seeds of region Z[i]
-            for j in xrange(len(connected_regions)):  # loop over all regions
-                if connected_regions[j] != 0:
-                    outeregion = np.where(RegionsX == connected_regions[j])[0]
-                    S_mean = SimilarityMeasures(Parc, insideregion, outeregion)
-                    if (S_mean > sth):
-                  # if  connected_regions[j] and Z[i] have high similarity measure
-                        sth = S_mean  # merge Z[i] to connected_regions[j]
-                        X = connected_regions[j]  # merge Z[i] to connected_regions[j]
-            RegionsX2 = np.array(RegionsX)
-            RegionsX2[np.array(insideregion)] = X
-            Un = np.unique(RegionsX2)  # new unique labels
-            nbr_r = len(Un)  # new number of regions
-            SizeRegion = np.zeros(nbr_r)
-            RegionX_ = np.zeros(len(RegionsX2))
-            for i in xrange(nbr_r):  # get the size of the new regions
-                ind = np.where(RegionsX2 == Un[i])[0]
-                SizeRegion[i] = len(ind)
-                RegionX_[np.array(ind)] = i
-            RegionsX = RegionX_
-        return RegionsX  # label of seeds after merging small regions with big ones.
-
     def Statistics_SM(self, Parc, Regions):
         # function used to extract the the similarity measure values between all the pairs
         # in each region as a vector
@@ -436,19 +447,9 @@ class Parcellation():
         #np.fill_diagonal(Parc.Similarity_Matrix, 0.0)
         for i in Un:
             ind = np.array(np.where(Regions == i)[0])
-            cv_array = self.Read_from_SM(Parc, ind)
+            cv_array = Read_from_SM(Parc, ind)
             if len(cv_array):
             	Reg_SM.extend(cv_array)
         # return the similarity measures values of all pairs inside each
         return np.array(Reg_SM)
 
-    def Read_from_SM(self, Parc, ind):
-        # this function is used to read sm values from the SM vector (n(n-1)/2)
-        cv_array = []
-        for iix in ind:
-            for jjx in ind:
-                if iix != jjx:
-                    ix = mat2cond_index(Parc.nbr_seeds, iix, jjx)
-                    cv_array.append(Parc.Similarity_Matrix[ix])
-
-        return np.array(cv_array)
