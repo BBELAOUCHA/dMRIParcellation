@@ -2,6 +2,8 @@
 [![Build Status](https://travis-ci.org/BBELAOUCHA/dMRIParcellation.svg?branch=master)](https://travis-ci.org/BBELAOUCHA/dMRIParcellation)
 [![codecov](https://codecov.io/gh/BBELAOUCHA/dMRIParcellation/branch/master/graph/badge.svg)](https://codecov.io/gh/BBELAOUCHA/dMRIParcellation)
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d82ad6541e214a04b3fc5f142cfa9cbf)](https://www.codacy.com/app/BBELAOUCHA/dMRIParcellation?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BBELAOUCHA/dMRIParcellation&amp;utm_campaign=Badge_Grade)
+
 dMRIParcellation is a python toolbox for parcellating whole cortical surface using
 diffusion Magnetic Resonanse Imaging (dMRI) information and the Mutual Nearest 
 Neighbor condition.
