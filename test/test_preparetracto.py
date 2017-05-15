@@ -3,7 +3,6 @@ import numpy as np
 from MNNparcellation import Prepare_tractogram as PT
 from MNNparcellation import Region_preparation as RP
 from MNNparcellation.inc.CSParcellation import Parcellation as CSP
-from MNNparcellation import util
 from termcolor import colored
 import os
 import h5py

@@ -2,9 +2,7 @@
 from MNNparcellation import Python2Vtk as PY
 import tempfile as TP
 import numpy as np
-import numpy.testing as npt
 from MNNparcellation import CSParcellation as CSP
-from MNNparcellation import util
 from termcolor import colored
 import warnings
 warnings.filterwarnings("ignore")
