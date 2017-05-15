@@ -1,5 +1,6 @@
 # Mutual Nearest Neighbor dMRI-based parcellation
 [![Build Status](https://travis-ci.org/BBELAOUCHA/dMRIParcellation.svg?branch=master)](https://travis-ci.org/BBELAOUCHA/dMRIParcellation)
+[![codecov](https://codecov.io/gh/BBELAOUCHA/dMRIParcellation/branch/master/graph/badge.svg)](https://codecov.io/gh/BBELAOUCHA/dMRIParcellation)
 
 dMRIParcellation is a python toolbox for parcellating whole cortical surface using
 diffusion Magnetic Resonanse Imaging (dMRI) information and the Mutual Nearest 
