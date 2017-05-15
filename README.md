@@ -1,4 +1,5 @@
 # Mutual Nearest Neighbor dMRI-based parcellation
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d82ad6541e214a04b3fc5f142cfa9cbf)](https://www.codacy.com/app/BBELAOUCHA/dMRIParcellation?utm_source=github.com&utm_medium=referral&utm_content=BBELAOUCHA/dMRIParcellation&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/BBELAOUCHA/dMRIParcellation.svg?branch=master)](https://travis-ci.org/BBELAOUCHA/dMRIParcellation)
 [![codecov](https://codecov.io/gh/BBELAOUCHA/dMRIParcellation/branch/master/graph/badge.svg)](https://codecov.io/gh/BBELAOUCHA/dMRIParcellation)
 
