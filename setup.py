@@ -15,5 +15,5 @@ setup(name=package_name,
       author='Brahim Belaoucha',
       author_email='brahim.belaoucha@inria.fr',
       packages=[package_name,inc_module],
-      scripts=['bin/MNNparcellation'],
+      scripts=['MNNparcellation/bin/MNNparcellation'],
       zip_safe=False)
