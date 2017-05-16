@@ -14,13 +14,13 @@ of seed i with coordinate (x,y,z), is be in the format of the
 probabilistic tractography of FSL i.e. file_prefix_x_y_z.nii.gz.
 
 # Requirements
-1-h5py
+1-h5py(>=2.6.0)
 
-2-scipy
+2-scipy(>=0.17.1)
 
-3-numpy
+3-numpy(>=1.11.3)
 
-4-nibabel
+4-nibabel(>=2.1.0)
 
 # Cite
 
