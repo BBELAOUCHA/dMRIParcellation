@@ -33,9 +33,6 @@ Symposium on Biomedical Imaging, Apr 2016, Prague, Czech Republic. 2016.
 
 Belaoucha Brahim 
 
-Papadopoulo Théodore
-
-
 # Installation
 python setup.py install
 
