@@ -54,13 +54,17 @@ def test_similarity():
     Label = np.zeros(nbr_seeds, dtype=int)
     Connectivity = np.array(np.eye(nbr_seeds))
     coordinate = np.array(np.zeros((nbr_seeds, 3)))
-    nbr_partical = 1000
+    nbr_partical = 10
     tracto = []
     for i in range(n_reg):
         Label[i * seed_reg:(i + 1)*seed_reg] = i
-        Connectivity[i * seed_reg:(i + 1)*seed_reg, i * seed_reg:(i + 1)*seed_reg] = 1
         for j in range(seed_reg):
-            tracto.append((i+1)*np.ones(nbr_partical))
+            for k in range(seed_reg):
+                Connectivity[i * seed_reg + j, i * seed_reg + k] = 1
+        #Connectivity[i * seed_reg:(i + 1)*seed_reg,
+        # i * seed_reg:(i + 1)*seed_reg] = 1
+        for j in range(seed_reg):
+            tracto.append(np.array((i+1)*np.ones(nbr_partical)))
 
     sim = CSP.Parcellation("", "", "", "", write_data=True)
     sim.save_path = './data/'
