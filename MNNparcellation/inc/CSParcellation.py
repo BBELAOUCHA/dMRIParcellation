@@ -233,8 +233,8 @@ class Parcellation():
         if len(self.Parc.zero_tracto) > 0:  # if there are void tractograms
             self.Parc.Replace_void_tracto()
             # replace void tractograms by the nearest neighbor non void
-            self.mesh.Remove_void_tracto(self.Parc.zero_tracto,
-                                         self.Parc.nonzero_tracto)
+            self.mesh.Remove_void_tracto(np.array(self.Parc.zero_tracto),
+                                         np.array(self.Parc.nonzero_tracto))
 
     def Parcellation_agg(self, coordinate, Connectivity, Excluded_seeds,
                          NbrRegion, SM_method, Mesh_plot, cvth):
@@ -452,7 +452,8 @@ class Parcellation():
                 # save results in ./results.txt
                     path_dum = self.save_results_path
                     path_dum += '/Labels_per_iteration.txt'
-                    np.savetxt(path_dum, Labels.T, fmt='%i', delimiter='\t')
+                    np.savetxt(path_dum, np.array(Labels).T, fmt='%i',
+                               delimiter='\t')
                     WritePython2Vtk(self.save_results_path+'/Parcellation.vtk',
                                     Mesh_plot.vertices.T, Mesh_plot.faces.T,
                                     Mesh_plot.normal.T, Regions)
