@@ -78,11 +78,11 @@ def Excluded_label(excluded, Labelnonexcluded, label_orig):
 class Mesh():  # class definition of mesh:-coordinates and tess connectivity
 
     def __init__(self, vertices, faces=None, normal=None, connectivity=None):
-        if faces is not None:
+        if faces is None:
             faces = []
-        if normal is not None:
+        if normal is None:
             normal = []
-        if connectivity is not None:
+        if connectivity is None:
             connectivity = []
         self.vertices = vertices  # coordinates in the diffusion space
         self.connectivity = connectivity  # mesh tess connectivity matrix
@@ -92,10 +92,12 @@ class Mesh():  # class definition of mesh:-coordinates and tess connectivity
     def Remove_void_tracto(self, zero_tracto, nonzero_tracto):
         # remove the void seeds from the parcellation
 
-        self.connectivity = self.connectivity[nonzero_tracto, :]
-        # to speed up the computation and for less memory.
-        self.connectivity = self.connectivity[:, nonzero_tracto]
-        self.vertices = self.vertices[nonzero_tracto, :]  # remove void seeds
+        if len(nonzero_tracto) > 0:
+            self.connectivity = self.connectivity[nonzero_tracto, :]
+            # to speed up the computation and for less memory.
+            self.connectivity = self.connectivity[:, nonzero_tracto]
+            self.vertices = self.vertices[nonzero_tracto, :]
+            # remove void seeds
         # void tractograms are removed from the computation
 
 
