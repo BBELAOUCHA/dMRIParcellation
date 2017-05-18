@@ -21,13 +21,12 @@
 ######################################################################################
 
 import sys
-sys.path.append("./inc/")
 import h5py
 import scipy
 import numpy as np
 import argparse
-import Region_preparation as RP
-from Cortical_surface_parcellation import Parcellation as CSP
+from MNNparcellation import Region_preparation as RP
+from MNNparcellation import CSParcellation as CSP # import Parcellation as CSP
 
 # How to run:
 # python run_Parcellation.py -i input -o output -t tractogram -tb tracto prefix -seed coordinate -Ex excluded -sm Similarity measures
@@ -59,36 +58,38 @@ if "Faces" in Cortex.keys():
     faces_plot = np.array(Cortex["Faces"], dtype=int)  # get faces of the mesh in the anatomical space.
     if faces_plot.min() > 0:
         faces_plot = faces_plot - 1
+
 Connectivity=np.eye(np.max(np.shape(coordinate)),dtype=int)
 if "VertConn" in Cortex.keys():
     C = Cortex['VertConn'] # get the tess connectivity matrix
     D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))#
     Connectivity = np.array(D_conenct.todense(), np.int8)
     del D_conenct, C, Cortex # delete unused dat
+
 Excluded_seeds=[] # default excluded seeds
 if Arg.excluded:
     Excluded_seeds = np.loadtxt(Arg.excluded, dtype=int) # get the list of the excluded seeds
 ################ Parcellation starts here #########################################
 Verbose = False # by default dont display any results
 if Arg.verbose:
-	Verbose	= True # display results
+    Verbose = True # display results
 
 cvth=np.Inf # by default variation coefficient is set to infinity i.e is not included in the stoping criteria
 if Arg.cv:
-	cvth = Arg.cv # default threshold used to stop merging regions with low homogeneity
+    cvth = Arg.cv # default threshold used to stop merging regions with low homogeneity
 
 Regions	= [len(coordinate[:,0])-len(Excluded_seeds)] # default number of regions
 if Arg.list:
-	Regions = [int(item) for item in Arg.list.split(',')]
+    Regions = [int(item) for item in Arg.list.split(',')]
 
 SM = ['Cosine'] # Default similarity measure, cosine similarity
 if Arg.SM:
-	SM = [item for item in Arg.SM.split(',')] # list conatining the wanted similarity measures
+    SM = [item for item in Arg.SM.split(',')] # list conatining the wanted similarity measures
 merge = 2
 if Arg.merge is not None:
-	merge = Arg.merge
+    merge = Arg.merge
 
-Parcel = CSP(Arg.tractograms, Arg.tract_name, Arg.save, Arg.nodif, Verbose, merge) # initialize the parcellation by specifying the different paths
+Parcel = CSP.Parcellation(Arg.tractograms, Arg.tract_name, Arg.save, Arg.nodif, Verbose, merge) # initialize the parcellation by specifying the different paths
 Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot) # define the mesh to be used to generate the vtk file
 del vertices_plot, faces_plot, normal_plot
 Parcel.Parcellation_agg(coordinate, Connectivity, Excluded_seeds, Regions, SM, Mesh_plot, cvth) # run the parcellation algorithm
