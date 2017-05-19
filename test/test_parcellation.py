@@ -61,7 +61,7 @@ def test_similarity():
         for j in range(seed_reg):
             for k in range(seed_reg):
                 Connectivity[i * seed_reg + j, i * seed_reg + k] = 1
-        #Connectivity[i * seed_reg:(i + 1)*seed_reg,
+        # Connectivity[i * seed_reg:(i + 1)*seed_reg,
         # i * seed_reg:(i + 1)*seed_reg] = 1
         for j in range(seed_reg):
             tracto.append(np.array((i+1)*np.ones(nbr_partical)))
