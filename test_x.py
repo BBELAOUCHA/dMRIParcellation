@@ -122,62 +122,17 @@ def run_parcellation(mesh_file, out_folder, tract_folder, tract_prefix,
                                 Regions, SM, Mesh_plot, cvth)
         # run the parcellation algorithm
 
-''' How to run:
-# MNNparcellation -i input -o output -t tractogram -tb tractoprefix
-#-seed coordinates # -Ex excluded -sm Similarity measures -n number of regions
-# -cvth coeficient of variance -nodif mask'''
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=("Parcellation based on MNN"
-                                                  "condition."))
-    parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
-    optional = parser.add_argument_group('optional arguments')
-    required.add_argument('-i', action="store", dest='input', type=str,
-                          help='''path to input file .mat that contain cortical
-                          mesh details (Faces, Normal, Vertices, VertConn)''')
-    required.add_argument('-o', action="store", dest='save', type=str,
-                          help='''path to output folder where to save
-                          the results''')
-    required.add_argument('-t', action="store", dest='tractograms', type=str,
-                         help='''folder that contains the tractograms"
-                         format ".nii.gz"''')
-    required.add_argument('-tb', action="store", dest='tract_name', type=str,
-                          help='''prefix of the tractogram name
-                          (tract_name_x_y_z.nii.gz)''')
-    required.add_argument('-seed', action="store", dest='coordinates',
-                          type=str, help='''path of coordinates of seeds in the
-                          diffusion space''')
-    required.add_argument('-sm',  dest='SM', default=['Cosine'],
-                          help='''Similarity measure: Cosine (default),
-                          "Tanimoto, Ruzicka, Motyka''')
-
-    required.add_argument('-n',  dest='NR', default=[100], help='''number T used
-                          to stop merging big regions defaul''')
-
-    optional.add_argument('-cvth', action="store", dest='cv', type=float,
-                          default=np.Inf, help='''variation coefficient is
-                          used to stop merging regions with low homogeneity''')
-
-    optional.add_argument('-nodif', action="store", dest='nodif',
-                          help='''path to white matter mask used to reduce
-                          memory usage''')
-    optional.add_argument('-v', action="store", dest='verbose', type=int,
-                          default=0, help='''Enable (1) showing results in
-                          terminal''')
-
-    optional.add_argument('-m', action="store", dest='merge', type=int,
-                          default=0, help='Merge option: 0 (default)')
-
-    optional.add_argument('-Ex', action="store", dest='excluded',
-                          help='''file that contain seeds to be excluded from
-                          the parcellation''')
-    args = parser.parse_args()  # read different parameters
-    if check_input(args):
-        print "Missing arguments check MNNparcellation --help"
-    else:
-        run_parcellation(args.input, args.save, args.tractograms,
-                         args.tract_name, args.coordinates, args.excluded,
-                         args.SM, args.NR, args.cv, args.nodif, args.merge,
-                         args.verbose)
+path = '/home/bbelaouc/dMRIParcellation/test/data/'
+inputs = path + 'W_cgal.mat'
+save = path + 'Results'
+tractograms = path + '/tract/'
+tract_name = 'tract_'
+coordinates = path + '/tract/fdt_coordinates.txt'
+excluded = path + '/Excluded_points.txt'
+SM=0
+NR='100,100'
+cv=np.Inf
+nodif=path + 'nodif_brain_mask.nii.gz'
+run_parcellation(inputs, save, tractograms, tract_name, coordinates, excluded,
+                 SM, NR, cv, nodif, 1, 1)

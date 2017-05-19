@@ -180,20 +180,20 @@ class Parcellation():
                                  '\t'+str(std_v[i]) + '\n')
             resultfile.close()
 
-    def Write2file_zero_tracto(self, Parc):
+    def Write2file_zero_tracto(self):
         ''' writesome results of the regions
         path to save, Similarity measure, nbr of regions, time of execution,
         mean values of SM, std of SM, stopping condition R.'''
 
         if self.write_data:
-            if len(Parc.zero_tracto) > 0:
+            if len(self.Parc.zero_tracto) > 0:
                 resultfile = open(self.save_path + '/zero_tractogram.txt', 'w')
                 resultfile.write('index_zero_tracto\t' +
                                  'index_replacement'+'\n')
-                zero_t, repla_c = Parc.zero_tracto, Parc.replacement
+                zero_t, repla_c = self.Parc.zero_tracto, self.Parc.replacement
                 for i in xrange(len(zero_t)):
-                    resultfile.write(str(zero_t[i])+'\t' +
-                                     str(repla_c[zero_t[i]]) + '\n')
+                    st = str(zero_t[i]) + '\t' + str(repla_c[zero_t[i]]) + '\n'
+                    resultfile.write(st)
                 resultfile.close()
 
     def PrepareData(self, coordinate, Connectivity, Excluded_seeds):
@@ -251,7 +251,7 @@ class Parcellation():
         printData['Save path:'] = self.save_path
         n_zero_t = len(self.Parc.zero_tracto)
         printData['# Tracto, # Void tracto'] = nbr_seeds, n_zero_t
-        self.Write2file_zero_tracto(self.Parc)
+        self.Write2file_zero_tracto()
         Connectivity = deepcopy(self.mesh.connectivity)
         # hard (not shallow) copy
         # new mesh connec after removing void tractogram used at each R and SM
