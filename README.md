@@ -41,7 +41,7 @@ MNNparcellation is the command used to parcellate the cortical surface. Check
 the file "./details/how_to_use.pdf" for more details or MNNparcellation --help.
 
 # Example
-An example of parcellating a part of temporal lobe can be obrained by running:
+An example of parcellating a part of temporal lobe can be obtained by running:
 
 sh example_parcellation.sh
 
