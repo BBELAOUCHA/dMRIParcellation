@@ -34,18 +34,24 @@ def test_preparetractogram():
     Input = cwd + '/W_cgal.mat'
     nodif = cwd + '/nodif_brain_mask.nii.gz'
     Exclude = cwd + '/Excluded_points.txt'
-    coordinate = np.loadtxt(str(coordinates), unpack=True, delimiter='\t', dtype=int).T  # read the diffusion space coordinate of the
+    coordinate = np.loadtxt(str(coordinates), unpack=True, delimiter='\t',
+                            dtype=int).T
+    # read the diffusion space coordinate of the
     x, y = np.shape(coordinate)
     if y > x:
-	coordinate = coordinate.T
+        coordinate = coordinate.T
     exclude = np.loadtxt(str(Exclude), unpack=True, delimiter='\t', dtype=int)
     Cortex = h5py.File(Input, 'r')
-    # load the details of the mesh, coordinate, faces, normal, mesh connecticity.
-    normal_plot = np.array(Cortex['VertNormals'])  # get the normals in the anatomical space
-    faces_plot = np.array(Cortex["Faces"], dtype=int)  # get faces of the mesh in the anatomical space.
-    vertices_plot = np.array(Cortex['Vertices'])  # get the coordinate in the anatomy image
+    # load the details of the mesh, coordinate, faces, normal, connecticity.
+    normal_plot = np.array(Cortex['VertNormals'])
+    # get the normals in the anatomical space
+    faces_plot = np.array(Cortex["Faces"], dtype=int)
+    # get faces of the mesh in the anatomical space.
+    vertices_plot = np.array(Cortex['Vertices'])
+    # get the coordinate in the anatomy image
     if faces_plot.min() > 0:
         faces_plot = faces_plot - 1
+
     C = Cortex['VertConn']  # get the tess connectivity matrix
     D_conenct = scipy.sparse.csc_matrix((C['data'], C['ir'], C['jc']))  #
     Connectivity = np.array(D_conenct.todense(), np.int8)
@@ -54,8 +60,11 @@ def test_preparetractogram():
     for i in range(2):
         Parcel = CSP(tractograms, tract_name, save, nodif, False,  i, True)
         Parcel.PrepareData(coordinate, Connectivity, exclude)
-        Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot)  # define the mesh to be used to generate the vtk file
-        Parcel.Parcellation_agg(coordinate, Connectivity, exclude, [10], ['Cosine'], Mesh_plot, np.Inf)  # run the parcellation algorithm
+        Mesh_plot = RP.Mesh(vertices_plot, faces_plot, normal_plot)
+        # define the mesh to be used to generate the vtk file
+        Parcel.Parcellation_agg(coordinate, Connectivity, exclude, [10],
+                                ['Cosine'], Mesh_plot, np.Inf)
+        # run the parcellation algorithm
         if np.max(Parcel.Labels) != Ground_t[i]:
             test[i] = False
 
@@ -68,12 +77,12 @@ if __name__ == "__main__":
     if not test:
         print colored('Failed!', 'red')
     else:
-	print  colored('Ok', 'green')
+        print colored('Ok', 'green')
 
     test = test_preparetractogram()
     for i in range(len(test)):
-        print "Test Prepare tractogram with merge = %2d........................" % (i),
+        print "Test Prepare tractogram with merge = %2d..............." % (i),
         if not test[i]:
             print colored('Failed!', 'red')
-	else:
-	    print  colored('Ok', 'green')
+        else:
+            print colored('Ok', 'green')
