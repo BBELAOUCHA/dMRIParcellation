@@ -260,11 +260,9 @@ class Parcellation():
         return printData
 
     def find_mergingcondidate(self, NBR_REGIONS, Regions, SimilarityMeasure):
-        printData = {}
         # dictionary used to display results
         Merg_Condidates = []
         # vector contains the Mutual nearest N condidates
-        SM_vector = []  # vector that contain the similarity values
         # between all pairs of regions
         for i in xrange(NBR_REGIONS):  # loop over the regions
             insideregion, connected_regions = RP.Neighbor_region(Regions, i,
