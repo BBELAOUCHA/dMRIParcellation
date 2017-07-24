@@ -63,12 +63,12 @@ def Ruzicka_SM(Parc, region1, region2):
                 T1 = Parc.tractograms[i]  # get the ith tractogram
                 T2 = Parc.tractograms[j]  # get the jth tractogram
                 a = np.minimum(T1, T2)   # compute similarity measure
-        b = np.maximum(T1, T2)
-        q = 0.0
-        if np.sum(b) is not 0.0:
-            q = np.sum(a)/np.sum(b)
-            S += q
-            Parc.Similarity_Matrix[ix] = q
+                b = np.maximum(T1, T2)
+                q = 0.0
+                if np.sum(b) is not 0.0:
+                    q = np.sum(a)/np.sum(b)
+                S += q
+                Parc.Similarity_Matrix[ix] = q
             # write value in similarity matrix
             # Parc.Similarity_Matrix[j, i] = q # matrix is symmetric
 

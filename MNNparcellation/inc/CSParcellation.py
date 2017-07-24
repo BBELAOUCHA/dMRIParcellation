@@ -152,10 +152,9 @@ class Parcellation():
         # type of postprocessing (after the MNN parcellation)
         self.Labels = []
         self.write_data = write_data
-
+        self.cvth = np.Inf
     def PrintResults(self, Data):
         # print the different results in the terminal
-
         if self.verbose:  # The result is saved in a dictionary
             for i in Data.keys():
                 print i, ' = ', Data[i]  # print the dictionary
@@ -236,14 +235,11 @@ class Parcellation():
             self.mesh.Remove_void_tracto(np.array(self.Parc.zero_tracto),
                                          np.array(self.Parc.nonzero_tracto))
 
-    def Parcellation_agg(self, coordinate, Connectivity, Excluded_seeds,
-                         NbrRegion, SM_method, Mesh_plot, cvth):
-        # diffusion coordinates, mesh connectivity , array of exclueded seeds,
-        # array of nbr of regions, array of similarity measures, mesh used
-        # to generate vtk files, variation coefficient threshold
-        # remove the void tractogram to speed up the computation.
-        nbr_seeds = self.nbr
-        printData = {}  # This dictionary is used to save the different results
+
+    def data2bprinted(self, Excluded_seeds, nbr_seeds):
+        # This function is used to disp the input info
+        # This dictionary is used to save the different results
+        printData = {}
         printData['# Excluded seeds:'] = len(Excluded_seeds)
         printData['Path to tractogram:'] = self.path_tractogram
         printData['Prefix name:'] = self.Prefix_name
@@ -251,7 +247,230 @@ class Parcellation():
         printData['Save path:'] = self.save_path
         n_zero_t = len(self.Parc.zero_tracto)
         printData['# Tracto, # Void tracto'] = nbr_seeds, n_zero_t
+        return printData
+
+    def result2bprinted(self, R, SM, nbr_iteration):
+        # This function is used to print info of the parcellation
+
+        printData = {}
+        printData[' # Region '] = R
+        printData['Similarity Measure'] = SM
+        printData['# Iterations'] = nbr_iteration
+        printData['Stop merging at'] = self.region_th
+        return printData
+
+    def find_mergingcondidate(self, NBR_REGIONS, Regions, SimilarityMeasure):
+        printData = {}
+        # dictionary used to display results
+        Merg_Condidates = []
+        # vector contains the Mutual nearest N condidates
+        SM_vector = []  # vector that contain the similarity values
+        # between all pairs of regions
+        for i in xrange(NBR_REGIONS):  # loop over the regions
+            insideregion, connected_regions = RP.Neighbor_region(Regions, i,
+                                                                 self.mesh)
+            nbr_connected = len(connected_regions)
+            if nbr_connected > 0:
+                S = np.zeros(nbr_connected)
+                for l in xrange(nbr_connected):
+                                # loop over i neighbors
+                    outeregion = np.where(np.array(Regions) ==
+                                          connected_regions[l])[0]
+                    S[l] = SimilarityMeasure(self.Parc, insideregion,
+                                             outeregion)
+                Reg_cond = list(np.where(S == S.max())[0])
+                Reg_list = [connected_regions[u] for u in Reg_cond]
+                Merg_Condidates.append(Reg_list)
+            else:
+                # if no neighbor i is merged with itself.
+                Merg_Condidates.append([i])
+
+        return Merg_Condidates
+
+    def merging_step(self, region_labels, Merg_Condidates, Regions):
+        # this function is used to merge condiate regions
+        RegionsX = np.array(Regions)
+        for i in xrange(len(region_labels)):
+            # check if the mutual nearest neighbor is valid
+            Reg_cond = Merg_Condidates[i]
+            # candidates of merging to region i
+            a = np.where(np.array(Regions) == region_labels[i])[0]
+            # get seeds with label  region_labels[i]
+            if len(a) < self.region_th:
+                for u in Reg_cond:
+                    Reg_list = Merg_Condidates[u]
+                    if i in Reg_list:
+                        # if region i is also a cond merging to u
+                        a = np.where(np.array(Regions) ==
+                                     region_labels[i])[0]
+                        # get seeds with label  region_labels[i]
+                        b = np.where(np.array(Regions) == u)[0]
+                        # get seeds with label  u
+                        c = list(a)
+                        # merge region  region_labels[i] and u
+                        c.extend(list(b))
+                        c = np.array(c)
+                        RegionsX[c] = region_labels[i]
+                        cv_array = Read_from_SM(self.Parc, c)
+                        c_v = cv(cv_array)
+                        n_c = len(c)
+                        if (n_c >= self.region_th or c_v > self.cvth):
+                            dum = self.mesh.connectivity[c, :]
+                            z_shape = np.shape(dum)
+                            dum = np.zeros(z_shape)
+                            self.mesh.connectivity[c, :] = dum
+                            # by setting rows and columns of i
+                            self.mesh.connectivity[:, c] = dum.T
+                            # to zero
+                        break
+                        # go to the next region
+        return RegionsX
+
+    def agg_over_region(self, nbr_seeds,  R, SimilarityMeasure, SM,
+                        Excluded_seeds, Connectivity, Mesh_plot,
+                        nbr_iteration = 100):
+        # run the MNN parcellation over parameter R of the MNN
+        key_str = 'Iter, # Reg, time(m), mean, std'
+        exe_Time = time.time()  # execution time for each loop
+        save_folder = self.save_path + "/" + SM + "/" + str(R)
+        self.save_results_path = save_folder
+        # folder where to save results
+        file_ex = os.path.exists(self.save_results_path)
+        if (self.write_data and not file_ex):  # cortical regions
+            os.makedirs(self.save_results_path)
+            # create the folder if not found
+        Reg = RP.Regions_processing(nbr_seeds)
+        # initialize the class to handle regions
+        Regions = Reg.regions
+        # initialize regions,each seed is a region.
+        NBR_REGIONS = nbr_seeds
+        s_value = np.float32(self.nbr_seedsX - len(Excluded_seeds) -
+                             len(self.Parc.zero_tracto))/R
+        self.region_th = round(s_value)
+        # number used to stop growing big regions
+        nbr_remaining = nbr_iteration
+        # initialize the remaining number of iterations
+        region_labels = xrange(nbr_seeds)  # inital labeling
+        self.mesh.connectivity = deepcopy(Connectivity)
+        # re initialize the mesh connectivity
+        # vectors that conatin nbrregions, execution time, mean and std
+        # of the similarity values at each iteration
+        nbr_r, t, mean_v, std_v = [], [], [], []
+        Labels = []
+        printData = self.result2bprinted(R, SM, nbr_iteration)
+        self.PrintResults(printData)
+        # disply results if verbose is active
+        while nbr_remaining > 0:
+            Merg_Condidates = self.find_mergingcondidate(NBR_REGIONS, Regions,
+                                                         SimilarityMeasure)
+            region_labels = np.unique(Regions)
+            RegionsX = self.merging_step(region_labels, Merg_Condidates,
+                                         Regions)
+            Regions = np.array(RegionsX)
+            SM_vector = Statistics_SM(self.Parc, Regions)
+            region_labels = np.unique(Regions)
+            if (len(region_labels) == NBR_REGIONS):
+                L, N = Add_void(self.Parc, Reg, Regions,
+                                Excluded_seeds,
+                                self.Label_non_excluded)
+                Label_all, NBR_REGIONS = L, N
+                # add the labels of the excluded and void seeds
+                Labels.append(Label_all)
+                # save the labels at each iteration
+                break  # exit the while loop
+
+            Label_all, NBR_REGIONS = Add_void(self.Parc, Reg, Regions,
+                                              Excluded_seeds,
+                                              self.Label_non_excluded)
+            # add the labels of the excluded and void seeds
+            nbr_remaining -= 1  # decrease iteration
+            nbr_r.append(NBR_REGIONS)  # append the nbr of regions
+            t.append((time.time()-exe_Time)/60)
+            # add execution time to the current parcellation
+            mean_v.append(np.mean(SM_vector, dtype=np.float64))
+            # add the mean of the SM values
+            std_v.append(np.std(SM_vector, dtype=np.float64))
+            # add the std of the SM values
+            Labels.append(Label_all)
+            nbr = "%03d" % (nbr_iteration-nbr_remaining)
+            t_s, m_v = format(t[-1], '.3f'), format(mean_v[-1], '.3f')
+            s_v = format(std_v[-1], '.3f')
+            printData[key_str] = nbr, NBR_REGIONS, t_s, m_v, s_v
+            self.PrintResults(printData)
+            # print results at each iteration if verbose is true
+
+        # add the zero tractogram to the nearest non zero tractogram
+        # merge small regions to the neighbrs with high similarity
+        X = self.Connectivity_X[:, np.array(self.Parc.nonzero_tracto)]
+        Connectivityx = deepcopy(X)
+        Y = Connectivityx[np.array(self.Parc.nonzero_tracto), :]
+        self.mesh.connectivity = deepcopy(Y)
+        NBR = np.unique(Regions)
+        Label_all = Regions
+        SizeRegion = np.zeros(len(NBR))
+        for i in xrange(len(NBR)):
+            index = np.where(Label_all == NBR[i])[0]
+            SizeRegion[i] = len(index)  # get the size of the regions
+            Regions[np.array(index)] = i
+
+        if self.merge == 1:
+            Regions = Merge_till_R(self.Parc, SimilarityMeasure, Reg,
+                                   SizeRegion, Regions, self.mesh, R)
+        # merge small regions with the highest SM to have R nbrR
+        elif self.merge == 0:
+            Regions = self.Small_Region_st(self.Parc,
+                                           SimilarityMeasure, Reg,
+                                           SizeRegion, Regions,
+                                           self.mesh)
+            # merge small regions with the nearest region (highest SM)
+        else:
+            pass
+
+        Reg_sm = Statistics_SM(self.Parc, Regions)
+        # extract the SM as a vector of the last label
+        nbr_r.append(len(np.unique(Regions)))
+        # append the nbr of regions
+        t.append((time.time()-exe_Time)/60)
+        # add execution time to the current parcellation
+        mean_v.append(np.mean(Reg_sm, dtype=np.float64))
+        # add the mean of the SM values
+        std_v.append(np.std(Reg_sm, dtype=np.float64))
+        # add the std of the SM values
+        region_labels = np.unique(Regions)
+        Regions, NBR_REGIONS = Add_void(self.Parc, Reg, Regions,
+                                        Excluded_seeds,
+                                        self.Label_non_excluded)
+        # add the label to void seeds
+        Labels.append(Regions)
+        # save the labels at each iteration
+        if self.write_data:
+            self.Write2file_results(SM, nbr_r, t, mean_v, std_v, R)
+        # save results in ./results.txt
+            path_dum = self.save_results_path
+            path_dum += '/Labels_per_iteration.txt'
+            np.savetxt(path_dum, np.array(Labels).T, fmt='%i',
+                       delimiter='\t')
+            WritePython2Vtk(self.save_results_path+'/Parcellation.vtk',
+                            Mesh_plot.vertices.T, Mesh_plot.faces.T,
+                            Mesh_plot.normal.T, Regions)
+        # save the final result in vtk
+        nbr = "%03d" % (nbr_iteration-nbr_remaining+1)
+        t_s, m_v = format(t[-1], '.3f'), format(mean_v[-1], '.3f')
+        s_v = format(std_v[-1], '.3f')
+        printData[key_str] = nbr, nbr_r[-1], t_s, m_v, s_v
+        self.PrintResults(printData)
+        self.Labels = Regions
+
+    def Parcellation_agg(self, coordinate, Connectivity, Excluded_seeds,
+                         NbrRegion, SM_method, Mesh_plot, cvth):
+        # diffusion coordinates, mesh connectivity , array of exclueded seeds,
+        # array of nbr of regions, array of similarity measures, mesh used
+        # to generate vtk files, variation coefficient threshold
+        # remove the void tractogram to speed up the computation.
+        nbr_seeds = self.nbr
+        printData = self.data2bprinted(Excluded_seeds, nbr_seeds)
         self.Write2file_zero_tracto()
+        self.cvth = cvth
         Connectivity = deepcopy(self.mesh.connectivity)
         # hard (not shallow) copy
         # new mesh connec after removing void tractogram used at each R and SM
@@ -269,201 +488,9 @@ class Parcellation():
             # reinit the Similarity_Matrix for the next similarity measure
             for R in NbrRegion:
                 # loop over the list containing the number of regions "R"
-                exe_Time = time.time()  # execution time for each loop
-                save_folder = self.save_path + "/" + SM + "/" + str(R)
-                self.save_results_path = save_folder
-                # folder where to save results
-                file_ex = os.path.exists(self.save_results_path)
-                if (self.write_data and not file_ex):  # cortical regions
-                    os.makedirs(self.save_results_path)
-                    # create the folder if not found
-                Reg = RP.Regions_processing(nbr_seeds)
-                # initialize the class to handle regions
-                Regions = Reg.regions
-                # initialize regions,each seed is a region.
-                NBR_REGIONS = nbr_seeds
-                s_value = np.float32(self.nbr_seedsX - len(Excluded_seeds) -
-                                     len(self.Parc.zero_tracto))/R
-                self.region_th = round(s_value)
-                # number used to stop growing big regions
-                nbr_remaining = nbr_iteration
-                # initialize the remaining number of iterations
-                region_labels = xrange(nbr_seeds)  # inital labeling
-                self.mesh.connectivity = deepcopy(Connectivity)
-                # re initialize the mesh connectivity
-                # vectors that conatin nbrregions, execution time, mean and std
-                # of the similarity values at each iteration
-                nbr_r, t, mean_v, std_v = [], [], [], []
-                Labels = []
-                # list of list contains the labels at each iteration
-                printData = {}
-                # reempty dictionary that is used todisplay results
-                printData['# Region'] = R
-                printData['Similarity Measure'] = SM
-                printData['# Iterations'] = nbr_iteration
-                printData['Stop merging at'] = self.region_th
-                self.PrintResults(printData)
-                key_str = 'Iter, # Reg, time(m), mean, std'
-                # disply results if verbose is active
-                while nbr_remaining > 0:
-                    # nbr of iteration
-                    printData = {}
-                    # dictionary used to display results
-                    Merg_Condidates = []
-                    # vector contains the Mutual nearest N condidates
-                    SM_vector = []  # vector that contain the similarity values
-                    # between all pairs of regions
-                    for i in xrange(NBR_REGIONS):  # loop over the regions
-                        ir, cr = RP.Neighbor_region(Regions, i, self.mesh)
-                        insideregion, connected_regions = ir, cr
-                        nbr_connected = len(connected_regions)
-                        if nbr_connected > 0:
-                            S = np.zeros(nbr_connected)
-                            for l in xrange(nbr_connected):
-                                # loop over i neighbors
-                                outeregion = np.where(np.array(Regions) ==
-                                                      connected_regions[l])[0]
-                                S[l] = SimilarityMeasure(self.Parc,
-                                                         insideregion,
-                                                         outeregion)
-                            Reg_cond = list(np.where(S == S.max())[0])
-                            Reg_list = [connected_regions[u] for u in Reg_cond]
-                            # get the neighbors with the max SM value
-                            Merg_Condidates.append(Reg_list)
-                        else:  # if no neighbor i is merged with itself.
-                            Merg_Condidates.append([i])
-
-                    region_labels = np.unique(Regions)
-                    RegionsX = np.array(Regions)
-                    for i in xrange(len(region_labels)):
-                        # check if the mutual nearest neighbor is valid
-                        Reg_cond = Merg_Condidates[i]
-                        # candidates of merging to region i
-                        a = np.where(np.array(Regions) == region_labels[i])[0]
-                        # get seeds with label  region_labels[i]
-                        if len(a) < self.region_th:
-                            for u in Reg_cond:
-                                Reg_list = Merg_Condidates[u]
-                                if i in Reg_list:
-                                    # if region i is also a cond merging to u
-                                    a = np.where(np.array(Regions) ==
-                                                 region_labels[i])[0]
-                                    # get seeds with label  region_labels[i]
-                                    b = np.where(np.array(Regions) == u)[0]
-                                    # get seeds with label  u
-                                    c = list(a)
-                                    # merge region  region_labels[i] and u
-                                    c.extend(list(b))
-                                    c = np.array(c)
-                                    RegionsX[c] = region_labels[i]
-                                    cv_array = Read_from_SM(self.Parc, c)
-                                    c_v = cv(cv_array)
-                                    n_c = len(c)
-                                    if (n_c >= self.region_th or c_v > cvth):
-                                        dum = self.mesh.connectivity[c, :]
-                                        z_shape = np.shape(dum)
-                                        dum = np.zeros(z_shape)
-                                        self.mesh.connectivity[c, :] = dum
-                                        # by setting rows and columns of i
-                                        self.mesh.connectivity[:, c] = dum.T
-                                        # to zero
-                                    break
-                                    # go to the next region
-
-                    Regions = np.array(RegionsX)
-                    SM_vector = Statistics_SM(self.Parc, Regions)
-                    region_labels = np.unique(Regions)
-                    if (len(region_labels) == NBR_REGIONS):
-                        L, N = Add_void(self.Parc, Reg, Regions,
-                                        Excluded_seeds,
-                                        self.Label_non_excluded)
-                        Label_all, NBR_REGIONS = L, N
-                        # add the labels of the excluded and void seeds
-                        Labels.append(Label_all)
-                        # save the labels at each iteration
-                        break  # exit the while loop
-
-                    Label_all, NBR_REGIONS = Add_void(self.Parc, Reg, Regions,
-                                                      Excluded_seeds,
-                                                      self.Label_non_excluded)
-                    # add the labels of the excluded and void seeds
-                    nbr_remaining -= 1  # decrease iteration
-                    nbr_r.append(NBR_REGIONS)  # append the nbr of regions
-                    t.append((time.time()-exe_Time)/60)
-                    # add execution time to the current parcellation
-                    mean_v.append(np.mean(SM_vector, dtype=np.float64))
-                    # add the mean of the SM values
-                    std_v.append(np.std(SM_vector, dtype=np.float64))
-                    # add the std of the SM values
-                    Labels.append(Label_all)
-                    nbr = "%03d" % (nbr_iteration-nbr_remaining)
-                    t_s, m_v = format(t[-1], '.3f'), format(mean_v[-1], '.3f')
-                    s_v = format(std_v[-1], '.3f')
-                    printData[key_str] = nbr, NBR_REGIONS, t_s, m_v, s_v
-                    self.PrintResults(printData)
-                    # print results at each iteration if verbose is true
-
-                # add the zero tractogram to the nearest non zero tractogram
-                # merge small regions to the neighbrs with high similarity
-                X = self.Connectivity_X[:, np.array(self.Parc.nonzero_tracto)]
-                Connectivityx = deepcopy(X)
-                Y = Connectivityx[np.array(self.Parc.nonzero_tracto), :]
-                self.mesh.connectivity = deepcopy(Y)
-                NBR = np.unique(Regions)
-                Label_all = Regions
-                SizeRegion = np.zeros(len(NBR))
-                for i in xrange(len(NBR)):
-                    index = np.where(Label_all == NBR[i])[0]
-                    SizeRegion[i] = len(index)  # get the size of the regions
-                    Regions[np.array(index)] = i
-
-                if self.merge == 1:
-                    Regions = Merge_till_R(self.Parc, SimilarityMeasure, Reg,
-                                           SizeRegion, Regions, self.mesh, R)
-                # merge small regions with the highest SM to have R nbrR
-                elif self.merge == 0:
-                    Regions = self.Small_Region_st(self.Parc,
-                                                   SimilarityMeasure, Reg,
-                                                   SizeRegion, Regions,
-                                                   self.mesh)
-                    # merge small regions with the nearest region (highest SM)
-                else:
-                    pass
-
-                Reg_sm = Statistics_SM(self.Parc, Regions)
-                # extract the SM as a vector of the last label
-                nbr_r.append(len(np.unique(Regions)))
-                # append the nbr of regions
-                t.append((time.time()-exe_Time)/60)
-                # add execution time to the current parcellation
-                mean_v.append(np.mean(Reg_sm, dtype=np.float64))
-                # add the mean of the SM values
-                std_v.append(np.std(Reg_sm, dtype=np.float64))
-                # add the std of the SM values
-                region_labels = np.unique(Regions)
-                Regions, NBR_REGIONS = Add_void(self.Parc, Reg, Regions,
-                                                Excluded_seeds,
-                                                self.Label_non_excluded)
-                # add the label to void seeds
-                Labels.append(Regions)
-                # save the labels at each iteration
-                if self.write_data:
-                    self.Write2file_results(SM, nbr_r, t, mean_v, std_v, R)
-                # save results in ./results.txt
-                    path_dum = self.save_results_path
-                    path_dum += '/Labels_per_iteration.txt'
-                    np.savetxt(path_dum, np.array(Labels).T, fmt='%i',
-                               delimiter='\t')
-                    WritePython2Vtk(self.save_results_path+'/Parcellation.vtk',
-                                    Mesh_plot.vertices.T, Mesh_plot.faces.T,
-                                    Mesh_plot.normal.T, Regions)
-                # save the final result in vtk
-                nbr = "%03d" % (nbr_iteration-nbr_remaining+1)
-                t_s, m_v = format(t[-1], '.3f'), format(mean_v[-1], '.3f')
-                s_v = format(std_v[-1], '.3f')
-                printData[key_str] = nbr, nbr_r[-1], t_s, m_v, s_v
-                self.PrintResults(printData)
-                self.Labels = Regions
+                self.agg_over_region(nbr_seeds, R, SimilarityMeasure, SM,
+                                     Excluded_seeds, Connectivity, Mesh_plot,
+                                     nbr_iteration)
 
     def Small_Region_st(self, Parc, SimilarityMeasures, Reg, SizeRegion,
                         Regions, mesh):

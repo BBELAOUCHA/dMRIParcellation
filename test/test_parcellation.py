@@ -82,7 +82,7 @@ def test_similarity():
     sim.mesh.normal = normal
     sim.mesh.vertices = coordinate
     sim.mesh.connectivity = Connectivity
-    SM_method = ['Correlation', 'Cosine', 'Tanimoto', 'Ruzicka', 'Motyka',
+    SM_method = ['Tanimoto', 'Ruzicka', 'Motyka', 'Correlation', 'Cosine',
                  'Roberts']
     Test = {}
     for Q in SM_method:
@@ -90,8 +90,9 @@ def test_similarity():
                              [Q], sim.mesh, np.inf)
         # SM = util.vec2symmetric_mat(sim.Parc.Similarity_Matrix, nbr_seeds)
         if np.linalg.norm(sim.Labels - Label) != 0:
+            print "Test now SM ", Q
             Test[Q] = False
-        return Test
+    return Test
 
 if __name__ == "__main__":
     print "Test Parcellation........................",
