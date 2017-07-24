@@ -40,7 +40,6 @@ def test_vec2symmetric_mat():
 
     n = 3
     X = []
-    Y = []
     a = np.random.rand(n, n)
     m = np.tril(a) + np.tril(a, -1).T
     Z = range(n*(n-1)/2)
