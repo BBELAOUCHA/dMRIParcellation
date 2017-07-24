@@ -1,16 +1,17 @@
 import numpy as np
 # This .py is a package to handle .vtk files in python without the need of
-#ITK package So far the following functions are implemented:
+# ITK package So far the following functions are implemented:
 # WritePython2Vtk: write .vtk files in python
 # ReadVtk2Python: Read .vtk file in python "it was created by WritePython2Vtk"
-#Created by Brahim Belaoucha on 2014/02/01
+# Created by Brahim Belaoucha on 2014/02/01
 
 
 def WritePython2Vtk(filename, vertices, faces, normal, scalar,
                     name_of_scalar="Parcels"):
-    #save the mesh into vtk ascii file
-    #Syntax:
-    #[]=WritePython2Vtk(FILENAME, VERTICES, FACES, NORMAL,SCALAR,NAME_OF_SCALAR)
+    # save the mesh into vtk ascii file
+    # Syntax:
+    # []= WritePython2Vtk(FILENAME, VERTICES, FACES, NORMAL,
+    #                     SCALAR, NAME_OF_SCALAR)
     # Vertices (nbr of vertices * nbr of dimention)
     # Faces    (nbr of faces * 3)
     # Normals  (nbr of vertices * 3)
@@ -44,18 +45,19 @@ def WritePython2Vtk(filename, vertices, faces, normal, scalar,
         f.write(' NORMALS normals float\n')
         for i in range(npoints):
             if len(np.shape(normal)) == 2:
-                f.write(" "+str('%.4f' % normal[i, 0])+' ' +
-                str('%.4f' % normal[i, 1])+' '+str('%.4f' % normal[i, 2]))
+                st = " " + str('%.4f' % normal[i, 0]) + ' '
+                st += str('%.4f' % normal[i, 1]) + ' '
+                f.write(st + str('%.4f' % normal[i, 2]))
             else:
                 f.write(" "+str('%.4f' % normal[i]))
     f.close()
 
 
 def ReadVtk2Python(filename):
-    #Read vtk file and output
-    #Syntax:
-    #Coordinates,Faces,Scalers,Normals=ReadVtk2Python(filename)
-    #fo = open(filename, 'rw+')
+    # Read vtk file and output
+    # Syntax:
+    # Coordinates,Faces,Scalers,Normals=ReadVtk2Python(filename)
+    # fo = open(filename, 'rw+')
     with open(filename) as f:
         mylist = f.read().splitlines()
 
@@ -65,12 +67,12 @@ def ReadVtk2Python(filename):
     Coordinates = np.zeros((nbr_points, dim))
     for i in range(5, nbr_points+5):
         Coordinates[i-5, :] = np.fromstring(mylist[i], dtype=float, sep=' ')
-        #np.float32(mylist[i].split(" "))
+        # np.float32(mylist[i].split(" "))
     Polygon_x = mylist[nbr_points+5].split(" ")
     Polygon_x = np.uint32(Polygon_x[-2])
     Faces = np.zeros((Polygon_x, 3), dtype=int)
     for i in range(nbr_points+6, nbr_points+6+Polygon_x):
-        F_i = np.fromstring(mylist[i], dtype=int, sep=' ')  # mylist[i].split(" ")
+        F_i = np.fromstring(mylist[i], dtype=int, sep=' ')
         Faces[i-nbr_points-6, :] = F_i[1:len(F_i)]
     Data = np.zeros(nbr_points)
     for i in range(nbr_points+10+Polygon_x, 2*nbr_points+10+Polygon_x):
