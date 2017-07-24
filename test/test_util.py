@@ -1,10 +1,12 @@
-
 import numpy as np
-from MNNparcellation.inc.util import mat2cond_index, cond2mat_index, vec2symmetric_mat
+from MNNparcellation.inc.util import mat2cond_index, cond2mat_index
+from MNNparcellation.inc.util import vec2symmetric_mat
 from termcolor import colored
+
 
 def test_mat2cond_index():
     " Test sym matrix to vector indexing "
+
     n = 10
     X = []
     Z = range(n*(n-1)/2)
@@ -14,8 +16,10 @@ def test_mat2cond_index():
             X.extend([nv])
     return X.sort() == Z.sort()
 
+
 def test_cond2mat_index():
     " Test vector 2 sym matrix indexing "
+
     n = 10
     X = []
     Y = []
@@ -30,8 +34,10 @@ def test_cond2mat_index():
             Z[i] = 1
     return np.sum(Z) == len(Z)
 
+
 def test_vec2symmetric_mat():
     " Test vector 2 sym matrix writing "
+
     n = 3
     X = []
     Y = []
