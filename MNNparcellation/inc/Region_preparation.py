@@ -69,7 +69,7 @@ def Excluded_label(excluded, Labelnonexcluded, label_orig):
         return Labelnonexcluded
 
     Label = np.zeros(len(excluded)+len(Labelnonexcluded))
-    for i in xrange(len(Labelnonexcluded)):
+    for i in range(len(Labelnonexcluded)):
         Label[label_orig[i]] = Labelnonexcluded[i]
 
     return Label  # return the label with 0 for excluded seeds

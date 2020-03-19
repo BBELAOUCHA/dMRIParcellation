@@ -72,17 +72,17 @@ def test_preparetractogram():
 
 
 if __name__ == "__main__":
-    print "Test read tractogram .........................................",
+    t = "Test read tractogram ........................................."
     test = test_readnibabel()
     if not test:
-        print colored('Failed!', 'red')
+        print(t, colored('Failed!', 'red'))
     else:
-        print colored('Ok', 'green')
+        print(t, colored('Ok', 'green'))
 
     test = test_preparetractogram()
     for i in range(len(test)):
-        print "Test Prepare tractogram with merge = %2d..............." % (i),
+        t = "Test Prepare tractogram with merge = %2d..............." % (i)
         if not test[i]:
-            print colored('Failed!', 'red')
+            print(t, colored('Failed!', 'red'))
         else:
-            print colored('Ok', 'green')
+            print(t, colored('Ok', 'green'))

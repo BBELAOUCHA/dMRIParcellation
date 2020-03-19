@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 '''
 ###############################################################################
 #
@@ -22,16 +23,16 @@
 # Any questions, please contact brahim.belaoucha@gmail.com
 ###############################################################################
 '''
-import Region_preparation as RP
-import Prepare_tractogram as PT
-import Similarity_Measures
+from . import Region_preparation as RP
+from . import Prepare_tractogram as PT
+from . import Similarity_Measures
 import numpy as np
-from Python2Vtk import WritePython2Vtk
+from .Python2Vtk import WritePython2Vtk
 from copy import deepcopy
 import os
 from scipy.stats import variation as cv
 import time
-from util import mat2cond_index
+from .util import mat2cond_index
 
 
 def Add_void(Parc, Reg, Regions, Excluded_seeds, Label_non_excluded):
@@ -42,7 +43,7 @@ def Add_void(Parc, Reg, Regions, Excluded_seeds, Label_non_excluded):
     region_labels = np.unique(Regions)
     NBR_REGIONS = len(region_labels)
     SizeRegion = np.zeros(NBR_REGIONS)
-    for ii in xrange(NBR_REGIONS):
+    for ii in range(NBR_REGIONS):
         insideregion = np.where(np.array(Regions) == region_labels[ii])[0]
         SizeRegion[ii] = len(insideregion)
         Regions[np.array(insideregion)] = ii
@@ -75,7 +76,7 @@ def Merge_till_R(Parc, SimilarityMeasures, Reg, SizeRegion, Regions, mesh,
         insideregion, connected_regions = RP.Neighbor_region(RegionsX,
                                                              Reg_small, mesh)
         # get the neighbors and seeds of region Z[i]
-        for j in xrange(len(connected_regions)):
+        for j in range(len(connected_regions)):
             # loop over all regions
             if connected_regions[j] != 0:
                 outeregion = np.where(RegionsX == connected_regions[j])[0]
@@ -92,7 +93,7 @@ def Merge_till_R(Parc, SimilarityMeasures, Reg, SizeRegion, Regions, mesh,
         nbr_r = len(Un)  # new number of regions
         SizeRegion = np.zeros(nbr_r)
         RegionX_ = np.zeros(len(RegionsX2))
-        for i in xrange(nbr_r):  # get the size of the new regions
+        for i in range(nbr_r):  # get the size of the new regions
             ind = np.where(RegionsX2 == Un[i])[0]
             SizeRegion[i] = len(ind)
             RegionX_[np.array(ind)] = i
@@ -157,7 +158,7 @@ class Parcellation():
         # print the different results in the terminal
         if self.verbose:  # The result is saved in a dictionary
             for i in Data.keys():
-                print i, ' = ', Data[i]  # print the dictionary
+                print(i, ' = ', Data[i])  # print the dictionary
 
     def Write2file_results(self, Similarity_Measure, nbr_r, t, mean_v,
                            std_v, R):
@@ -172,7 +173,7 @@ class Parcellation():
                              '\t R:=' + str(R)+'\n')
             hd = 'nbr i \t nbr R \t t(min) \t mean SM \t STD SM: \n'
             resultfile.write(hd)
-            for i in xrange(len(nbr_r)):
+            for i in range(len(nbr_r)):
                 nbr = "%03d" % nbr_r[i]
                 resultfile.write(str(i + 1) + '\t' + nbr + '\t' +
                                  str(t[i]) + '\t' + str(mean_v[i]) +
@@ -190,13 +191,13 @@ class Parcellation():
                 resultfile.write('index_zero_tracto\t' +
                                  'index_replacement'+'\n')
                 zero_t, repla_c = self.Parc.zero_tracto, self.Parc.replacement
-                for i in xrange(len(zero_t)):
+                for i in range(len(zero_t)):
                     st = str(zero_t[i]) + '\t' + str(repla_c[zero_t[i]]) + '\n'
                     resultfile.write(st)
                 resultfile.close()
 
     def PrepareData(self, coordinate, Connectivity, Excluded_seeds):
-        all_Seeds = xrange(len(coordinate[:, 0]))
+        all_Seeds = np.array([i for i in range(len(coordinate[:, 0]))])
         # they will be removed from the coordinates
         self.nbr_seedsX = len(all_Seeds)  # number of vertices
         self.Label_non_excluded = list(set(all_Seeds))
@@ -264,13 +265,13 @@ class Parcellation():
         Merg_Condidates = []
         # vector contains the Mutual nearest N condidates
         # between all pairs of regions
-        for i in xrange(NBR_REGIONS):  # loop over the regions
+        for i in range(NBR_REGIONS):  # loop over the regions
             insideregion, connected_regions = RP.Neighbor_region(Regions, i,
                                                                  self.mesh)
             nbr_connected = len(connected_regions)
             if nbr_connected > 0:
                 S = np.zeros(nbr_connected)
-                for l in xrange(nbr_connected):
+                for l in range(nbr_connected):
                                 # loop over i neighbors
                     outeregion = np.where(np.array(Regions) ==
                                           connected_regions[l])[0]
@@ -288,7 +289,7 @@ class Parcellation():
     def merging_step(self, region_labels, Merg_Condidates, Regions):
         # this function is used to merge condiate regions
         RegionsX = np.array(Regions)
-        for i in xrange(len(region_labels)):
+        for i in range(len(region_labels)):
             # check if the mutual nearest neighbor is valid
             Reg_cond = Merg_Condidates[i]
             # candidates of merging to region i
@@ -348,7 +349,7 @@ class Parcellation():
         # number used to stop growing big regions
         nbr_remaining = nbr_iteration
         # initialize the remaining number of iterations
-        region_labels = xrange(nbr_seeds)  # inital labeling
+        region_labels = np.array([x for x in range(nbr_seeds)])  # inital labeling
         self.mesh.connectivity = deepcopy(Connectivity)
         # re initialize the mesh connectivity
         # vectors that conatin nbrregions, execution time, mean and std
@@ -406,7 +407,7 @@ class Parcellation():
         NBR = np.unique(Regions)
         Label_all = Regions
         SizeRegion = np.zeros(len(NBR))
-        for i in xrange(len(NBR)):
+        for i in range(len(NBR)):
             index = np.where(Label_all == NBR[i])[0]
             SizeRegion[i] = len(index)  # get the size of the regions
             Regions[np.array(index)] = i
@@ -481,7 +482,7 @@ class Parcellation():
             # loop over the list containing the name of the similarity measures
             SimilarityMeasure = getattr(Similarity_Measures, SM+'_SM')
             # call the function of the similarity measures SM
-            self.Parc.Similarity_Matrix = np.zeros(nbr_seeds*(nbr_seeds-1)/2,
+            self.Parc.Similarity_Matrix = np.zeros(nbr_seeds*(nbr_seeds-1)//2,
                                                    dtype=np.float16)
             # reinit the Similarity_Matrix for the next similarity measure
             for R in NbrRegion:
@@ -503,14 +504,14 @@ class Parcellation():
         nbr_small_rg = len(Reg_small)
         while nbr_small_rg > 0:
             # loop to merge small regions with bigger ones
-            for i in xrange(len(Reg_small)):
+            for i in range(len(Reg_small)):
                 # loop over the number of small regions
                 sth = 0
                 insideregion, connected_r = RP.Neighbor_region(RegionsX,
                                                                Reg_small[i],
                                                                mesh)
                 # get the neighbors and seeds of region Z[i]
-                for j in xrange(len(connected_r)):  # loop over all regions
+                for j in range(len(connected_r)):  # loop over all regions
                     if (connected_r[j] != 0):
                         outeregion = np.where(RegionsX == connected_r[j])[0]
                         S_mean = SimilarityMeasures(Parc, insideregion,
@@ -521,7 +522,7 @@ class Parcellation():
                             X[i] = connected_r[j]
                             # merge Z[i] to connected_r[j]
             RegionsX2 = np.array(RegionsX)
-            for i in xrange(nbr_small_rg):
+            for i in range(nbr_small_rg):
                 # change the labeling  after the merging
                 indx = np.where(RegionsX == Reg_small[i])[0]
                 RegionsX2[np.array(indx)] = X[i]
@@ -533,7 +534,7 @@ class Parcellation():
             # new number of regions
             SizeRegion = np.zeros(nbr_r)
             RegionX_ = np.zeros(len(RegionsX))
-            for i in xrange(nbr_r):
+            for i in range(nbr_r):
                 # get the size of the new regions
                 ind = np.where(RegionsX == Un[i])[0]
                 SizeRegion[i] = len(ind)

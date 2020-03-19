@@ -108,7 +108,7 @@ def run_parcellation(mesh_file, out_folder, tract_folder, tract_prefix,
             SM = [item for item in sim_m.split(',')]
         # list conatining the wanted similarity measures
         merge = 2
-        if merge_v:
+        if (merge_v == 0) or (merge_v == 1):
             merge = merge_v
 
         Parcel = CSP(tract_folder, tract_prefix, out_folder, file_mask,

@@ -45,6 +45,6 @@ def test_python2vtk():
 
 if __name__ == "__main__":
     if test_python2vtk():
-        print "Write and Read vtk files .....Ok"
+        print("Write and Read vtk files .....Ok")
     else:
-        print "Write and Read vtk files .....Failed"
+        print("Write and Read vtk files .....Failed")

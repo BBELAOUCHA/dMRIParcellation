@@ -9,12 +9,12 @@ def test_mat2cond_index():
 
     n = 10
     X = []
-    Z = range(n*(n-1)/2)
+    Z = np.arange(n*(n-1)//2)
     for i in range(n):
         for j in range(i):
             nv = mat2cond_index(n, i, j)
             X.extend([nv])
-    return X.sort() == Z.sort()
+    return np.array(X).sort() == Z.sort()
 
 
 def test_cond2mat_index():
@@ -23,11 +23,11 @@ def test_cond2mat_index():
     n = 10
     X = []
     Y = []
-    Z = range(n*(n-1)/2)
+    Z = np.arange(n*(n-1)//2)
     for i in range(n):
         for j in range(i):
             X.append([j, i])
-    for i in range(n*(n-1)/2):
+    for i in range(n*(n-1)//2):
         nv = cond2mat_index(n, i)
         Y.append(list(nv))
         if X[i].sort() == Y[i].sort():
@@ -42,7 +42,7 @@ def test_vec2symmetric_mat():
     X = []
     a = np.random.rand(n, n)
     m = np.tril(a) + np.tril(a, -1).T
-    Z = range(n*(n-1)/2)
+    Z = np.zeros(n*(n-1)//2)
     for i in range(n):
         m[i, i] = 1
         for j in range(i):
@@ -56,17 +56,17 @@ def test_vec2symmetric_mat():
 
 
 if __name__ == "__main__":
-    print "Test Util file........................",
+    print("Test Util file........................")
     if test_mat2cond_index():
-        print colored('Ok', 'green')
+        print( 'mat2cond_index ', colored('Ok', 'green'))
     else:
-        print colored('Failed !', 'red')
+        print(colored('mat2cond_index ', 'Failed !', 'red'))
 
     if test_cond2mat_index():
-        print colored('Ok', 'green')
+        print('cond2mat_index ', colored('Ok', 'green'))
     else:
-        print colored('Failed !', 'red')
+        print('cond2mat_index ', colored('Failed !', 'red'))
     if test_vec2symmetric_mat():
-        print colored('Ok', 'green')
+        print('vec2symmetric_mat ', colored('Ok', 'green'))
     else:
-        print colored('Failed !', 'red')
+        print('vec2symmetric_mat ', colored('Failed !', 'red'))

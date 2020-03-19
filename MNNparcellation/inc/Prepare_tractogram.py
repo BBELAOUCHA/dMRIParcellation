@@ -39,7 +39,7 @@ class Parcellation_data():
         if mesh:
             self.mesh = mesh  # mesh details coordinates and tess connectivity
             nbr = len(mesh.vertices[:, 1])
-            self.Similarity_Matrix = np.zeros(nbr*(nbr-1)/2, dtype=np.float16)
+            self.Similarity_Matrix = np.zeros(nbr*(nbr-1)//2, dtype=np.float16)
             # matrix contains similarity measure values
 
         self.excluded = []  # excluded seeds
@@ -76,7 +76,7 @@ class Parcellation_data():
         self.tractograms = []
         vertices = list(self.mesh.vertices)
         # the coordinate of the seeds in the diffusion space
-        for i in xrange(len(vertices)):  # loop over the coordinates
+        for i in range(len(vertices)):  # loop over the coordinates
             seed = vertices[i]  # extract the x,y,z coordinate
             T = self.Read_tracto(seed)  # read the tractogram
             self.nbr_sample = np.max(T.reshape(-1))

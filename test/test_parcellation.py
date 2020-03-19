@@ -50,17 +50,17 @@ def test_similarity():
     " Test similarity measures "
     nbr_seeds = 100
     n_reg = 10
-    seed_reg = nbr_seeds/n_reg
+    seed_reg = nbr_seeds//n_reg
     Label = np.zeros(nbr_seeds, dtype=int)
     Connectivity = np.array(np.eye(nbr_seeds))
     coordinate = np.array(np.zeros((nbr_seeds, 3)))
     nbr_partical = 10
     tracto = []
     for i in range(n_reg):
-        Label[i * seed_reg:(i + 1)*seed_reg] = i
+        Label[int(i * seed_reg):int((i + 1)*seed_reg)] = i
         for j in range(seed_reg):
             for k in range(seed_reg):
-                Connectivity[i * seed_reg + j, i * seed_reg + k] = 1
+                Connectivity[int(i * seed_reg + j), int(i * seed_reg + k)] = 1
         # Connectivity[i * seed_reg:(i + 1)*seed_reg,
         # i * seed_reg:(i + 1)*seed_reg] = 1
         for j in range(seed_reg):
@@ -73,7 +73,7 @@ def test_similarity():
     sim.Parc.tractograms = tracto
     sim.Parc.nonzero_tracto = np.array(range(nbr_seeds))
     sim.Parc.zero_tracto = []
-    sim.Parc.Similarity_Matrix = np.zeros(nbr_seeds*(nbr_seeds - 1)/2)
+    sim.Parc.Similarity_Matrix = np.zeros(nbr_seeds*(nbr_seeds - 1)//2)
     sim.nbr = nbr_seeds
     sim.Connectivity_X = Connectivity
     face = np.array(np.zeros((nbr_seeds, 3)))
@@ -90,19 +90,19 @@ def test_similarity():
                              [Q], sim.mesh, np.inf)
         # SM = util.vec2symmetric_mat(sim.Parc.Similarity_Matrix, nbr_seeds)
         if np.linalg.norm(sim.Labels - Label) != 0:
-            print "Test now SM ", Q
+            print("Test now SM ", Q)
             Test[Q] = False
     return Test
 
 if __name__ == "__main__":
-    print "Test Parcellation........................",
+    print("Test Parcellation........................")
     if not test_similarity():
-        print colored('Ok', 'green')
+        print('similarity ', colored('Ok', 'green'))
     else:
-        print colored('Failed !', 'red')
+        print('similarity ', colored('Failed !', 'red'))
 
-    print "Test Write and Read .vtk files ..........",
+    print("Test Write and Read .vtk files ..........")
     if test_python2vtk():
-        print colored('Ok', 'green')
+        print('python2vtk ', colored('Ok', 'green'))
     else:
-        print colored('Failed !', 'red')
+        print('python2vtk ', colored('Failed !', 'red'))

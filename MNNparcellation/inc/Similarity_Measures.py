@@ -24,7 +24,7 @@
 '''
 import numpy as np
 from scipy.stats import pearsonr
-from util import mat2cond_index
+from .util import mat2cond_index
 
 
 def Correlation_SM(Parc, region1, region2):
